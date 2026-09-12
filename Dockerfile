@@ -24,5 +24,6 @@ COPY data ./data
 
 RUN mkdir -p out data/raw data/interim data/processed
 
-# Full weekly pipeline; Railway cron / custom startCommand can override.
-CMD ["pulsator", "run"]
+# Stay up on Railway ($PORT). Trigger the weekly pulse with POST /run.
+EXPOSE 8080
+CMD ["python", "-m", "src.serve"]

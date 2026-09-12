@@ -7,6 +7,8 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-startCommand = "pulsator run"
+startCommand = "python -m src.serve"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
