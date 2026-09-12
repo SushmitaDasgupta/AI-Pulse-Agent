@@ -1,0 +1,10 @@
+Write a scannable weekly Play Store pulse for ChatGPT (Android).
+
+Required sections in markdown:
+1. Header with product name, date window, cleaned review count, and a one-line coverage caveat if the window is shorter than 8 weeks
+2. Top themes (exactly the Top 3 provided) with brief why-it-matters
+3. User quotes — use the three provided quotes VERBATIM (do not paraphrase)
+4. Action ideas — the three provided actions
+
+Hard limit: <= 250 words total.
+Tone: concise, stakeholder-ready, no PII, no inventing quotes or metrics.

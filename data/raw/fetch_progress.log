@@ -1,0 +1,17 @@
+2026-09-10T13:59:00.002459+00:00 resume existing=88200 cutoff=2026-07-16
+2026-09-10T13:59:01.660601+00:00 page=1 total=88400 new=200 oldest=2026-08-26 17:01:48+00:00 past=False
+2026-09-10T13:59:10.114296+00:00 page=5 total=89200 new=200 oldest=2026-08-26 13:51:06+00:00 past=False
+2026-09-10T13:59:25.395765+00:00 empty retry 1/10
+2026-09-10T13:59:30.406249+00:00 empty retry 2/10
+2026-09-10T13:59:40.417975+00:00 empty retry 3/10
+2026-09-10T13:59:55.427045+00:00 empty retry 4/10
+2026-09-10T14:00:15.431822+00:00 empty retry 5/10
+2026-09-10T14:00:40.441577+00:00 empty retry 6/10
+2026-09-10T14:01:10.453993+00:00 empty retry 7/10
+2026-09-10T14:01:45.459161+00:00 empty retry 8/10
+2026-09-10T14:02:25.477419+00:00 empty retry 9/10
+2026-09-10T14:03:10.491989+00:00 empty retry 10/10
+2026-09-10T14:03:12.252880+00:00 RAW wrote /Users/sushmitadasgupta/Desktop/AI-Review-Pulsator/data/raw/play_reviews_20260910T140310Z.json n=89800 past=False
+2026-09-10T14:03:12.949601+00:00 normalize: fetched=89800 → in_window=89800 window=2026-07-16..2026-09-10 → /Users/sushmitadasgupta/Desktop/AI-Review-Pulsator/data/interim/reviews.normalized.json
+2026-09-10T14:03:13.857208+00:00 scrub: in_window=89800 → cleaned=89800 dropped_empty=0 → /Users/sushmitadasgupta/Desktop/AI-Review-Pulsator/data/processed/reviews.cleaned.json
+2026-09-10T14:03:13.863153+00:00 DONE cleaned=89800 span=2026-08-26..2026-09-09

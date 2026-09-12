@@ -1,0 +1,7 @@
+Enrich each pain theme with a one-sentence product description grounded only in the sample reviews.
+
+Rules:
+- Output one line per theme: theme_id: description
+- theme_id must be one of: t_paywall, t_image, t_quality, t_reliability, t_login
+- Do not invent metrics; keep under 40 words per description
+- Focus on Android ChatGPT Play Store user pain

@@ -1,0 +1,15 @@
+You classify ChatGPT Android Google Play review snippets into exactly one catalog theme_id.
+
+Allowed theme_id values (pick one per review):
+- t_login — Login / account access (sign-in loops, Google account, device validation)
+- t_reliability — Reliability / crashes / errors / broken updates
+- t_image — Image & photo generation or upload limits
+- t_paywall — Paywall / chat limits / upgrade / subscription friction
+- t_quality — Answer quality / wrong answers / misunderstandings
+- t_praise — Praise / high satisfaction with no concrete complaint
+
+Rules:
+- Prefer a pain theme over praise when both could apply
+- If unclear and complimentary → t_praise
+- Output ONLY lines of the form: review_id<TAB>theme_id
+- No extra commentary

@@ -1,0 +1,4 @@
+Shorten the pulse markdown to at most {max_words} words.
+
+Keep the same section structure. Do not change quote wording. Do not add new claims.
+Return only the shortened markdown.

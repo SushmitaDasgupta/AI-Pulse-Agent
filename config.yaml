@@ -1,0 +1,76 @@
+# AI Review Pulsator — runtime config
+
+app_id: com.openai.chatgpt
+play_url: https://play.google.com/store/apps/details?id=com.openai.chatgpt&hl=en_IN
+# Derived from play_url hl=en_IN — public listing fetch parameters
+lang: en
+country: in
+
+acquire:
+  # live = google-play-scraper against public listing (falls back to file on failure)
+  # file = latest data/raw/play_reviews_*.json or fixture_path (CI / offline)
+  mode: live
+  client: google-play-scraper # public Play listing reviews; no login / no Play Console
+  sort: newest
+  max_reviews: 500000         # ChatGPT volume is high; raise to cover full lookback
+  raw_glob: data/raw/play_reviews_*.json
+  fixture_path: data/raw/play_reviews_fixture.json
+
+lookback_weeks: 8             # within 8–12
+max_themes: 5
+pulse_top_themes: 3
+pulse_quotes: 3
+pulse_actions: 3
+max_pulse_words: 250
+
+email_to: "you@example.com"   # fallback; prefer EMAIL_TO in .env
+docs_title_template: "ChatGPT Play Pulse — {iso_week}"
+
+# Phase 3 — Railway Google Workspace MCP (Streamable HTTP)
+# Tools: google_docs_append_content, gmail_draft_email (never gmail_send_email)
+mcp:
+  url: https://mcp-server-google-production.up.railway.app/mcp
+  # api_key: set via MCP_API_KEY in .env (do not commit)
+  docs_document_id: ""          # or set GOOGLE_DOCS_DOCUMENT_ID in .env
+  email_subject_template: "ChatGPT Play Pulse — {iso_week}"
+
+paths:
+  raw_dir: data/raw
+  interim_dir: data/interim
+  processed_dir: data/processed
+  out_dir: out
+  prompts_dir: prompts
+  cleaned_reviews: data/processed/reviews.cleaned.json
+  cleaned_reviews_csv: data/processed/reviews.cleaned.csv
+  normalized_reviews: data/interim/reviews.normalized.json
+  themes: out/themes.json
+  selection: out/selection.json
+  pulse_md: out/pulse.md
+  pulse_json: out/pulse.json
+  run_log: out/run.log
+
+langchain:
+  tracing: false
+  # When true, publish/draft_email failures abort the run (after local pulse exists)
+  require_mcp: false
+  # Dual-LLM split (P2):
+  #   classify  → Groq labels reviews into the theme catalog
+  #   generate  → Gemini writes theme copy, quotes, actions, pulse prose
+  classify_sample_size: 900   # stratified reviews sent to Groq (not full 9.4k)
+  classify_batch_size: 20     # reviews per Groq request (stay under TPM)
+  classify:
+    provider: groq
+    model: openai/gpt-oss-120b
+    temperature: 0
+    requests_per_minute: 30
+    requests_per_day: 1000
+    tokens_per_minute: 8000
+    tokens_per_day: 200000
+  generate:
+    provider: gemini
+    model: gemini-2.5-flash    # Gemini Developer API; override if needed
+    temperature: 0.2
+    requests_per_minute: 15
+    requests_per_day: 1500
+    tokens_per_minute: 1000000
+    tokens_per_day: 10000000

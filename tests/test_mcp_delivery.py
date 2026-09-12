@@ -1,0 +1,157 @@
+"""Phase-3 MCP delivery unit tests (mocked HTTP — no live Railway)."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+from src.agent.schemas import DateWindow, PulseResult, TopThemeSummary
+from src.agent.tools.delivery import (
+    build_docs_append_content,
+    build_email_body,
+    draft_email_via_mcp,
+    publish_docs_via_mcp,
+)
+from src.agent.tools.mcp_client import (
+    McpError,
+    McpHttpClient,
+    _extract_tool_payload,
+    _parse_jsonrpc_response,
+    docs_url_for_id,
+    extract_document_id,
+)
+from src.config import load_config
+
+
+def _pulse() -> PulseResult:
+    return PulseResult(
+        window=DateWindow(start="2026-08-26", end="2026-09-09"),
+        top_themes=[
+            TopThemeSummary(label="Paywall", summary="limits", review_count=10)
+        ],
+        word_count=42,
+        markdown="# Pulse\n\nHello stakeholders.\n",
+    )
+
+
+def test_extract_document_id_from_url_and_bare() -> None:
+    assert (
+        extract_document_id("https://docs.google.com/document/d/AbC123_x/edit")
+        == "AbC123_x"
+    )
+    assert extract_document_id("AbC123_x") == "AbC123_x"
+
+
+def test_parse_sse_jsonrpc() -> None:
+    body = (
+        "event: message\n"
+        'data: {"jsonrpc":"2.0","id":1,"result":{"ok":true}}\n\n'
+    )
+    parsed = _parse_jsonrpc_response(body, "text/event-stream")
+    assert parsed["result"]["ok"] is True
+
+
+def test_extract_tool_payload_success_envelope() -> None:
+    result = {
+        "content": [
+            {
+                "type": "text",
+                "text": json.dumps(
+                    {
+                        "success": True,
+                        "message": "ok",
+                        "documentId": "doc1",
+                    }
+                ),
+            }
+        ]
+    }
+    out = _extract_tool_payload(result)
+    assert out.success is True
+    assert out.payload["documentId"] == "doc1"
+
+
+def test_extract_tool_payload_failure_envelope() -> None:
+    result = {
+        "isError": True,
+        "content": [
+            {
+                "type": "text",
+                "text": json.dumps(
+                    {
+                        "success": False,
+                        "error": {"code": "DOCUMENT_NOT_FOUND", "message": "missing"},
+                    }
+                ),
+            }
+        ],
+    }
+    out = _extract_tool_payload(result)
+    assert out.success is False
+
+
+def test_build_email_includes_doc_link() -> None:
+    body = build_email_body(_pulse(), "https://docs.google.com/document/d/x/edit")
+    assert "Google Doc:" in body
+    assert "draft only" in body
+
+
+def test_publish_and_draft_via_mocked_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    cfg = load_config()
+    monkeypatch.setattr(cfg.mcp, "docs_document_id", "DocId123")
+    monkeypatch.setenv("EMAIL_TO", "ops@example.com")
+    monkeypatch.setattr(cfg, "email_to", "you@example.com")
+
+    calls: list[tuple[str, dict[str, Any]]] = []
+
+    class FakeClient(McpHttpClient):
+        def __init__(self) -> None:  # noqa: D107
+            pass
+
+        def call_tool(self, name: str, arguments: dict[str, Any]):  # type: ignore[override]
+            from src.agent.tools.mcp_client import McpToolResult
+
+            calls.append((name, arguments))
+            if name == "google_docs_append_content":
+                return McpToolResult(
+                    success=True,
+                    payload={
+                        "success": True,
+                        "documentId": arguments["documentId"],
+                        "message": "appended",
+                    },
+                    raw_text="{}",
+                )
+            if name == "gmail_draft_email":
+                return McpToolResult(
+                    success=True,
+                    payload={"success": True, "draftId": "r-draft-1", "message": "drafted"},
+                    raw_text="{}",
+                )
+            raise AssertionError(name)
+
+    pulse = _pulse()
+    published = publish_docs_via_mcp(cfg, pulse, client=FakeClient())
+    assert published["document_id"] == "DocId123"
+    assert published["url"] == docs_url_for_id("DocId123")
+    appended = build_docs_append_content(pulse, iso_week="2026-W37")
+    assert "2026-W37" in appended and "Hello stakeholders" in appended
+
+    drafted = draft_email_via_mcp(
+        cfg, pulse, doc_url=published["url"], client=FakeClient()
+    )
+    assert drafted["draft_id"] == "r-draft-1"
+    assert calls[0][0] == "google_docs_append_content"
+    assert calls[1][0] == "gmail_draft_email"
+    assert "gmail_send_email" not in {c[0] for c in calls}
+
+
+def test_publish_requires_document_id(monkeypatch: pytest.MonkeyPatch) -> None:
+    cfg = load_config()
+    monkeypatch.setattr(cfg.mcp, "docs_document_id", "")
+    monkeypatch.delenv("GOOGLE_DOCS_DOCUMENT_ID", raising=False)
+    with pytest.raises(McpError, match="Missing Google Doc id"):
+        publish_docs_via_mcp(cfg, _pulse(), client=McpHttpClient.__new__(McpHttpClient))

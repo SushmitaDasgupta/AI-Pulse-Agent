@@ -1,0 +1,118 @@
+{
+  "provenance": {
+    "app_id": "com.openai.chatgpt",
+    "play_url": "https://play.google.com/store/apps/details?id=com.openai.chatgpt&hl=en_IN",
+    "lang": "en",
+    "country": "in",
+    "client": "fixture",
+    "fetched_at": "2026-09-10T00:00:00Z",
+    "mode": "file",
+    "note": "Offline fixture shaped like google-play-scraper review fields (P1 file mode / tests)."
+  },
+  "reviews": [
+    {
+      "reviewId": "fixture_001",
+      "userName": "UserA",
+      "userImage": null,
+      "content": "App keeps crashing when I open long chats. Please fix the stability issues.",
+      "score": 2,
+      "thumbsUpCount": 12,
+      "reviewCreatedVersion": "1.2026.1",
+      "at": "2026-08-28T10:15:00.000Z",
+      "replyContent": null,
+      "repliedAt": null,
+      "appVersion": "1.2026.1"
+    },
+    {
+      "reviewId": "fixture_002",
+      "userName": "UserB",
+      "userImage": null,
+      "content": "Responses are very slow on mobile data. Streaming often stalls mid-answer.",
+      "score": 3,
+      "thumbsUpCount": 8,
+      "reviewCreatedVersion": "1.2026.1",
+      "at": "2026-08-20T14:30:00.000Z",
+      "replyContent": null,
+      "repliedAt": null,
+      "appVersion": "1.2026.1"
+    },
+    {
+      "reviewId": "fixture_003",
+      "userName": "UserC",
+      "userImage": null,
+      "content": "Cannot renew Plus subscription. Billing page errors out after login.",
+      "score": 1,
+      "thumbsUpCount": 21,
+      "reviewCreatedVersion": "1.2026.0",
+      "at": "2026-08-12T09:00:00.000Z",
+      "replyContent": null,
+      "repliedAt": null,
+      "appVersion": "1.2026.0"
+    },
+    {
+      "reviewId": "fixture_004",
+      "userName": "UserD",
+      "userImage": null,
+      "content": "Great for brainstorming, but answers feel less useful than a few months ago.",
+      "score": 4,
+      "thumbsUpCount": 5,
+      "reviewCreatedVersion": "1.2026.1",
+      "at": "2026-07-30T18:45:00.000Z",
+      "replyContent": null,
+      "repliedAt": null,
+      "appVersion": "1.2026.1"
+    },
+    {
+      "reviewId": "fixture_005",
+      "userName": "UserE",
+      "userImage": null,
+      "content": "Onboarding is confusing. Hard to find voice mode and settings are buried.",
+      "score": 3,
+      "thumbsUpCount": 6,
+      "reviewCreatedVersion": "1.2026.0",
+      "at": "2026-07-18T11:20:00.000Z",
+      "replyContent": null,
+      "repliedAt": null,
+      "appVersion": "1.2026.0"
+    },
+    {
+      "reviewId": "fixture_006",
+      "userName": "Alice Example",
+      "userImage": null,
+      "content": "Login fails repeatedly with Google account. Email me at alice@example.com or call +1-555-123-4567. device_id: abcd-efgh-1234-5678 and IMEI 490154203237518 order #ORD998877.",
+      "score": 2,
+      "thumbsUpCount": 15,
+      "reviewCreatedVersion": "1.2025.12",
+      "at": "2026-07-05T08:10:00.000Z",
+      "replyContent": null,
+      "repliedAt": null,
+      "appVersion": "1.2025.12"
+    },
+    {
+      "reviewId": "fixture_007_empty",
+      "userName": "EmptyUser",
+      "userImage": null,
+      "content": "   ",
+      "score": 1,
+      "thumbsUpCount": 0,
+      "reviewCreatedVersion": "1.2026.1",
+      "at": "2026-08-01T12:00:00.000Z",
+      "replyContent": null,
+      "repliedAt": null,
+      "appVersion": "1.2026.1"
+    },
+    {
+      "reviewId": "fixture_008_old",
+      "userName": "OldUser",
+      "userImage": null,
+      "content": "This review is outside the lookback window and should be filtered out.",
+      "score": 5,
+      "thumbsUpCount": 1,
+      "reviewCreatedVersion": "1.2025.1",
+      "at": "2026-01-15T12:00:00.000Z",
+      "replyContent": null,
+      "repliedAt": null,
+      "appVersion": "1.2025.1"
+    }
+  ]
+}
