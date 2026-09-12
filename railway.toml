@@ -1,0 +1,12 @@
+# Railway deploy for AI Review Pulsator (CLI batch / cron-friendly).
+# Secrets (GROQ_API_KEY, GEMINI_API_KEY, MCP_*, GOOGLE_DOCS_DOCUMENT_ID, EMAIL_TO)
+# are set in the Railway dashboard — do not commit .env.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "pulsator run"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
