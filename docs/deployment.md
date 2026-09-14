@@ -84,24 +84,36 @@ Prefer GitHub Actions for the weekly schedule. If you use Railway cron / one-off
 
 ## 2. Frontend — Vercel
 
-The UI lives in [`web/`](../web/) (Vite + React). Build output is static files in `web/dist`.
+The UI lives in [`web/`](../web/) (Vite + React). Build output is static files in `web/dist`. Config: [`web/vercel.json`](../web/vercel.json).
 
 > **P6 note:** The UI is currently **seeded** from local pulse data (no live backend wire-up). Deploying to Vercel still works as a static site; API env vars are for a later hookup.
 
+> **Critical:** This repo is a monorepo (Python backend at root + React in `web/`). Vercel **must** use Root Directory `web`. If Root Directory is left blank, Vercel scans the repo root, treats it as Python (`src/serve.py`, `src/cli.py`, …), and fails with *“No python entrypoint found…”*.
+
 ### Create the project
 
-1. In Vercel: **Add New…** → **Project** → import this GitHub repository.
-2. Configure:
+1. In Vercel: **Add New…** → **Project** → import this GitHub repository ([AI-Pulse-Agent](https://github.com/SushmitaDasgupta/AI-Pulse-Agent)).
+2. **Before the first deploy**, open **Root Directory** → **Edit** → select `web` → Continue.
+3. Configure (should auto-detect Vite once Root Directory is `web`):
 
 | Setting | Value |
 | --- | --- |
-| **Root Directory** | `web` |
-| **Framework Preset** | Vite (auto-detected) |
+| **Root Directory** | `web` (**required**) |
+| **Framework Preset** | Vite |
 | **Build Command** | `npm run build` |
 | **Output Directory** | `dist` |
 | **Install Command** | `npm install` |
 
-3. Deploy. Vercel will assign a URL like `https://ai-review-pulsator.vercel.app`.
+4. Deploy. Vercel will assign a URL like `https://ai-review-pulsator.vercel.app`.
+
+### Fix an existing project that failed as Python
+
+If you already imported the repo without Root Directory `web`:
+
+1. Vercel → your project → **Settings** → **General** → **Root Directory** → set to `web` → Save.
+2. **Deployments** → open the failed deployment → **Redeploy** (or push a new commit).
+
+Do **not** point Vercel at the repo root — that path is for Railway (`Dockerfile`), not Vercel.
 
 ### Environment variables (optional / future)
 
@@ -188,7 +200,8 @@ Create the rolling Google Doc once; put its id in `GOOGLE_DOCS_DOCUMENT_ID` on t
 | Railway healthcheck fails | Logs for import/crash; confirm `PORT` and `CMD` match `python -m src.serve` |
 | `/run` starts but pulse fails | Missing LLM/MCP env; see `[serve] pulse failed` in logs |
 | Doc/Gmail soft-skip | Set `REQUIRE_MCP=true` or use `--require-mcp` |
-| Vercel build fails | Root Directory must be `web`; Node 20+ recommended |
+| Vercel: *No python entrypoint found…* (`src/__main__.py`, `src/cli.py`, `src/serve.py`) | Root Directory is the **repo root**. Set it to **`web`**, Save, Redeploy (§2) |
+| Vercel build fails (other) | Root Directory must be `web`; Framework = Vite; Node 20+ recommended |
 | Blank / wrong pulse on Vercel | UI still uses seed data until API wire-up |
 | CORS errors from browser → Railway | Expected until CORS or a Vercel rewrite/proxy is added |
 

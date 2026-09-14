@@ -8,7 +8,12 @@ from typing import Any
 
 import pytest
 
-from src.agent.schemas import DateWindow, PulseResult, TopThemeSummary
+from src.agent.schemas import (
+    ActionRecord,
+    DateWindow,
+    PulseResult,
+    TopThemeSummary,
+)
 from src.agent.tools.delivery import (
     build_docs_append_content,
     build_email_body,
@@ -28,12 +33,35 @@ from src.config import load_config
 
 def _pulse() -> PulseResult:
     return PulseResult(
+        product="ChatGPT (Android)",
         window=DateWindow(start="2026-08-26", end="2026-09-09"),
         top_themes=[
-            TopThemeSummary(label="Paywall", summary="limits", review_count=10)
+            TopThemeSummary(
+                label="Paywall / limits / upgrade friction",
+                summary="Free-tier chat caps and upgrade nags.",
+                review_count=555,
+            ),
+            TopThemeSummary(
+                label="Answer quality / misunderstandings",
+                summary="Wrong answers and flip-flops.",
+                review_count=311,
+            ),
+        ],
+        actions=[
+            ActionRecord(
+                title="Clarify free-tier limits before users hit the wall",
+                theme="Paywall / limits / upgrade friction",
+            ),
+            ActionRecord(
+                title="Reduce confident-wrong answers and flip-flops",
+                theme="Answer quality / misunderstandings",
+            ),
         ],
         word_count=42,
-        markdown="# Pulse\n\nHello stakeholders.\n",
+        markdown=(
+            "# Pulse\n\n**Window:** 2026-08-26 → 2026-09-09 · "
+            "**Cleaned reviews:** 9,428\n"
+        ),
     )
 
 
@@ -94,9 +122,22 @@ def test_extract_tool_payload_failure_envelope() -> None:
 
 
 def test_build_email_includes_doc_link() -> None:
-    body = build_email_body(_pulse(), "https://docs.google.com/document/d/x/edit")
-    assert "Google Doc:" in body
-    assert "draft only" in body
+    body = build_email_body(
+        _pulse(),
+        "https://docs.google.com/document/d/x/edit",
+        iso_week="2026-W37",
+    )
+    assert "ChatGPT (Android) Play Pulse — 2026-W37" in body
+    assert "26 Aug → 9 Sep 2026" in body
+    assert "9,428 cleaned reviews" in body
+    assert "Top themes" in body
+    assert "1. Paywall / limits / upgrade friction (n=555)" in body
+    assert "Free-tier chat caps and upgrade nags." in body
+    assert "Suggested actions" in body
+    assert "Clarify free-tier limits before users hit the wall" in body
+    assert "Read the full pulse (quotes + detail):" in body
+    assert "https://docs.google.com/document/d/x/edit" in body
+    assert "Draft only — review in Gmail" in body
 
 
 def test_publish_and_draft_via_mocked_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -139,7 +180,7 @@ def test_publish_and_draft_via_mocked_client(tmp_path: Path, monkeypatch: pytest
     assert published["document_id"] == "DocId123"
     assert published["url"] == docs_url_for_id("DocId123")
     appended = build_docs_append_content(pulse, iso_week="2026-W37")
-    assert "2026-W37" in appended and "Hello stakeholders" in appended
+    assert "2026-W37" in appended and "Cleaned reviews" in appended
 
     drafted = draft_email_via_mcp(
         cfg, pulse, doc_url=published["url"], client=FakeClient()

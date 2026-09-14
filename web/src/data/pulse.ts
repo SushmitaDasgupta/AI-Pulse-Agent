@@ -141,21 +141,53 @@ export const PIPELINE_STAGES = [
   'Email',
 ] as const
 
+function formatDayMonth(isoDate: string): string {
+  const stamp = new Date(`${isoDate.slice(0, 10)}T00:00:00Z`)
+  if (Number.isNaN(stamp.getTime())) return isoDate
+  return stamp.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  })
+}
+
+function formatWindow(data: PulseData): string {
+  const start = formatDayMonth(data.window.start)
+  const end = formatDayMonth(data.window.end)
+  const year = data.window.end.slice(0, 4)
+  return `${start} → ${end} ${year}`
+}
+
 export function buildDefaultEmail(data: PulseData) {
   const themes = data.topThemes
-    .map((t, i) => `${i + 1}. ${t.label} (n=${t.reviewCount.toLocaleString()})`)
+    .map((t, i) => {
+      const head = `${i + 1}. ${t.label} (n=${t.reviewCount.toLocaleString()})`
+      return t.summary ? `${head}\n   ${t.summary}` : head
+    })
     .join('\n')
-  const actions = data.actions.map((a) => a.title).join(', ')
+  const actions = data.actions
+    .map((a, i) => `${i + 1}. ${a.title}`)
+    .join('\n')
+
   return {
     to: 'you@company.com',
     subject: `ChatGPT Play Pulse — ${data.isoWeek}`,
-    body: `Window: ${data.window.start} → ${data.window.end} (${data.cleanedReviews.toLocaleString()} reviews | ${data.wordCount} words)
+    body: `${data.product} Play Pulse — ${data.isoWeek}
 
-Top 3 Themes:
+Weekly signal from Android Google Play reviews.
+Window: ${formatWindow(data)} · ${data.cleanedReviews.toLocaleString()} cleaned reviews · ${data.wordCount} words
+
+Top themes
 ${themes}
 
-Key Actions: ${actions}.
+Suggested actions
+${actions}
 
-Archive Link: ${data.docUrl}`,
+Read the full pulse (quotes + detail):
+${data.docUrl}
+
+—
+Draft only — review in Gmail, then send when ready.
+AI Review Pulsator`,
   }
 }

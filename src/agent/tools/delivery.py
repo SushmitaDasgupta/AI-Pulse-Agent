@@ -8,6 +8,7 @@ MCP tools used (server: google-workspace-mcp):
 from __future__ import annotations
 
 import os
+import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -59,21 +60,108 @@ def build_docs_append_content(pulse: PulseResult, *, iso_week: str) -> str:
     return f"{header}{body}\n"
 
 
-def build_email_body(pulse: PulseResult, doc_url: str | None) -> str:
-    themes = ", ".join(t.label for t in pulse.top_themes[:3]) or "(none)"
+def _format_day_month(iso_date: str) -> str:
+    """Format YYYY-MM-DD as '26 Aug' (no leading zero)."""
+    try:
+        stamp = datetime.strptime(iso_date[:10], "%Y-%m-%d")
+    except ValueError:
+        return iso_date
+    return f"{stamp.day} {stamp.strftime('%b')}"
+
+
+def _format_window(pulse: PulseResult) -> str:
+    if not pulse.window:
+        return "?"
+    start_raw = pulse.window.start
+    end_raw = pulse.window.end
+    start = _format_day_month(start_raw)
+    end = _format_day_month(end_raw)
+    year = ""
+    try:
+        year = f" {datetime.strptime(end_raw[:10], '%Y-%m-%d').year}"
+    except ValueError:
+        year = ""
+    return f"{start} → {end}{year}"
+
+
+def _cleaned_review_count(pulse: PulseResult) -> int | None:
+    """Best-effort parse from pulse markdown header (not on PulseResult schema)."""
+    match = re.search(
+        r"Cleaned reviews:\*?\*?\s*([\d,]+)",
+        pulse.markdown or "",
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return None
+    try:
+        return int(match.group(1).replace(",", ""))
+    except ValueError:
+        return None
+
+
+def build_email_body(
+    pulse: PulseResult,
+    doc_url: str | None,
+    *,
+    iso_week: str | None = None,
+) -> str:
+    """Executive-style Gmail draft body (plain text; draft-only footer)."""
+    week = iso_week or iso_week_label()
+    product = (pulse.product or "ChatGPT (Android)").strip()
+    window = _format_window(pulse)
+    cleaned = _cleaned_review_count(pulse)
+    meta_bits = [f"Window: {window}"]
+    if cleaned is not None:
+        meta_bits.append(f"{cleaned:,} cleaned reviews")
+    if pulse.word_count:
+        meta_bits.append(f"{pulse.word_count} words")
+
     lines = [
-        "ChatGPT Play Pulse is ready for review.",
+        f"{product} Play Pulse — {week}",
         "",
-        f"Window: {pulse.window.start if pulse.window else '?'} → "
-        f"{pulse.window.end if pulse.window else '?'}",
-        f"Top themes: {themes}",
-        f"Word count: {pulse.word_count}",
+        "Weekly signal from Android Google Play reviews.",
+        " · ".join(meta_bits),
+        "",
+        "Top themes",
     ]
-    if doc_url:
-        lines.extend(["", f"Google Doc: {doc_url}"])
+    themes = list(pulse.top_themes[:3])
+    if not themes:
+        lines.append("(none)")
     else:
-        lines.extend(["", "(Doc URL unavailable — see out/pulse.md locally.)"])
-    lines.extend(["", "— AI Review Pulsator (draft only; not sent)"])
+        for i, theme in enumerate(themes, start=1):
+            n = f" (n={theme.review_count:,})" if theme.review_count else ""
+            lines.append(f"{i}. {theme.label}{n}")
+            summary = (theme.summary or "").strip()
+            if summary:
+                lines.append(f"   {summary}")
+
+    lines.extend(["", "Suggested actions"])
+    actions = list(pulse.actions[:3])
+    if not actions:
+        lines.append("(none)")
+    else:
+        for i, action in enumerate(actions, start=1):
+            lines.append(f"{i}. {action.title}")
+
+    lines.append("")
+    if doc_url:
+        lines.extend(
+            [
+                "Read the full pulse (quotes + detail):",
+                doc_url,
+            ]
+        )
+    else:
+        lines.append("(Doc URL unavailable — see out/pulse.md locally.)")
+
+    lines.extend(
+        [
+            "",
+            "—",
+            "Draft only — review in Gmail, then send when ready.",
+            "AI Review Pulsator",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -128,7 +216,7 @@ def draft_email_via_mcp(
     week = iso_week_label()
     subject_tmpl = cfg.mcp.email_subject_template or cfg.docs_title_template
     subject = subject_tmpl.format(iso_week=week)
-    body = build_email_body(pulse, doc_url)
+    body = build_email_body(pulse, doc_url, iso_week=week)
     mcp = client or McpHttpClient(
         url=cfg.mcp.url or None,
         api_key=cfg.mcp.api_key or None,
