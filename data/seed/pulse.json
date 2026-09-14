@@ -1,0 +1,72 @@
+{
+  "product": "ChatGPT (Android)",
+  "app_id": "com.openai.chatgpt",
+  "window": {
+    "start": "2026-08-26",
+    "end": "2026-09-09"
+  },
+  "generated_at": "2026-09-11T04:09:45.778015Z",
+  "top_themes": [
+    {
+      "label": "Image & photo generation limits",
+      "summary": "Photo/image upload or generation caps, slow image creates, vision limits.",
+      "review_count": 1170
+    },
+    {
+      "label": "Paywall / limits / upgrade friction",
+      "summary": "Free-tier chat caps, Plus/Go/Pro upgrade nags, billing and subscription pain.",
+      "review_count": 555
+    },
+    {
+      "label": "Answer quality / misunderstandings",
+      "summary": "Wrong answers, flip-flopping when corrected, not understanding the user.",
+      "review_count": 311
+    }
+  ],
+  "quotes": [
+    {
+      "text": "it is like the dumbest creature I have ever seen. one time I took a photo of my chemistry book and told it read and for every word",
+      "theme": "Image & photo generation limits",
+      "rating": 1,
+      "review_id": "r_634109d3e03f2016"
+    },
+    {
+      "text": "the bot is good but you telling me that I can go and use Gemini and I dont have any problems I can keep chatting for as long",
+      "theme": "Paywall / limits / upgrade friction",
+      "rating": 1,
+      "review_id": "r_31f66278236772d7"
+    },
+    {
+      "text": "it started lying to me. I'm trying to do a book because I'm dying of a disease I got this app because I was told it was the",
+      "theme": "Answer quality / misunderstandings",
+      "rating": 1,
+      "review_id": "r_7826290cd35dd041"
+    }
+  ],
+  "actions": [
+    {
+      "title": "Make image/photo quotas understandable and fair",
+      "rationale": "Users complain about limited photo generation/upload; explain caps and improve fallback messaging.",
+      "theme": "Image & photo generation limits"
+    },
+    {
+      "title": "Clarify free-tier limits before users hit the wall",
+      "rationale": "Reviews cite abrupt chat/photo caps and upgrade nags; surface remaining quota earlier.",
+      "theme": "Paywall / limits / upgrade friction"
+    },
+    {
+      "title": "Reduce confident-wrong answers and flip-flops",
+      "rationale": "1★ reviews describe incorrect answers that agree after correction; tighten grounding and correction UX.",
+      "theme": "Answer quality / misunderstandings"
+    }
+  ],
+  "word_count": 232,
+  "markdown": "# ChatGPT (Android) Play Pulse\n\n**Window:** 2026-08-26 → 2026-09-09 · **Cleaned reviews:** 9,428. Note: full 2026-07-16–2026-09-10 lookback not covered yet.\n\n## Top themes\n1. **Image & photo generation limits** (n=1170) — Photo/image upload or generation caps, slow image creates, vision limits.\n2. **Paywall / limits / upgrade friction** (n=555) — Free-tier chat caps, Plus/Go/Pro upgrade nags, billing and subscription pain.\n3. **Answer quality / misunderstandings** (n=311) — Wrong answers, flip-flopping when corrected, not understanding the user.\n\n## User quotes\n1. \"it is like the dumbest creature I have ever seen. one time I took a photo of my chemistry book and told it read and for every word\"\n2. \"the bot is good but you telling me that I can go and use Gemini and I dont have any problems I can keep chatting for as long\"\n3. \"it started lying to me. I'm trying to do a book because I'm dying of a disease I got this app because I was told it was the\"\n\n## Action ideas\n1. **Make image/photo quotas understandable and fair** — Users complain about limited photo generation/upload; explain caps and improve fallback messaging.\n2. **Clarify free-tier limits before users hit the wall** — Reviews cite abrupt chat/photo caps and upgrade nags; surface remaining quota earlier.\n3. **Reduce confident-wrong answers and flip-flops** — 1★ reviews describe incorrect answers that agree after correction; tighten grounding and correction UX.\n",
+  "doc": {
+    "id": "1GrxdD-fvsyLYHcmCgV0fRWLt3dqQoAfqrjS0MhcHYu0",
+    "url": "https://docs.google.com/document/d/1GrxdD-fvsyLYHcmCgV0fRWLt3dqQoAfqrjS0MhcHYu0/edit"
+  },
+  "email_draft": {
+    "id": "r8978149254941956545"
+  }
+}

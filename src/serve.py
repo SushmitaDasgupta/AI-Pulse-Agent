@@ -36,14 +36,24 @@ def _run_pulse() -> None:
 
 def _deliver_pulse(payload: dict[str, Any]) -> dict[str, Any]:
     """Append Doc + create Gmail draft via MCP (sync; used by the web UI)."""
+    from pathlib import Path
+
     from src.agent.schemas import PulseResult
     from src.agent.tools.delivery import draft_email_via_mcp, publish_docs_via_mcp
     from src.config import load_config
 
     cfg = load_config("config.yaml")
     pulse_path = cfg.resolve(cfg.paths.pulse_json)
+    seed_path = Path("data/seed/pulse.json")
     if not pulse_path.is_file():
-        raise FileNotFoundError(f"Missing pulse artifact: {pulse_path}")
+        if seed_path.is_file():
+            pulse_path.parent.mkdir(parents=True, exist_ok=True)
+            pulse_path.write_text(seed_path.read_text(encoding="utf-8"), encoding="utf-8")
+            print(f"[serve] seeded {pulse_path} from {seed_path}")
+        else:
+            raise FileNotFoundError(
+                f"Missing pulse artifact: {pulse_path} (and no {seed_path})"
+            )
 
     pulse = PulseResult.model_validate_json(pulse_path.read_text(encoding="utf-8"))
     published = publish_docs_via_mcp(cfg, pulse)
