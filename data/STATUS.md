@@ -34,7 +34,18 @@
 | MCP URL | `https://mcp-server-google-production.up.railway.app/mcp` |
 | Tools | `google_docs_append_content`, `gmail_draft_email` |
 | Needs | `GOOGLE_DOCS_DOCUMENT_ID`, `EMAIL_TO`, optional `MCP_API_KEY` |
-| Live smoke | Pending operator Doc id + inbox |
+| Live smoke | Done (Doc append + Gmail draft IDs in `out/pulse.json`) |
+
+## Phase-4 Weekly scheduler
+
+| Item | Value |
+| --- | --- |
+| Workflow | `.github/workflows/weekly-pulse.yml` |
+| Cadence | Mondays 09:00 UTC |
+| Command | `pulsator run --require-mcp` |
+| Local dry-run | `--require-mcp` publish + draft verified |
+| Actions secrets | Set `GROQ_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_DOCS_DOCUMENT_ID`, `EMAIL_TO` then Run workflow |
+
 
 ## Open these files
 

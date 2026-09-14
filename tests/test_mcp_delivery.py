@@ -101,6 +101,7 @@ def test_build_email_includes_doc_link() -> None:
 
 def test_publish_and_draft_via_mocked_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     cfg = load_config()
+    monkeypatch.setenv("GOOGLE_DOCS_DOCUMENT_ID", "DocId123")
     monkeypatch.setattr(cfg.mcp, "docs_document_id", "DocId123")
     monkeypatch.setenv("EMAIL_TO", "ops@example.com")
     monkeypatch.setattr(cfg, "email_to", "you@example.com")
@@ -151,7 +152,8 @@ def test_publish_and_draft_via_mocked_client(tmp_path: Path, monkeypatch: pytest
 
 def test_publish_requires_document_id(monkeypatch: pytest.MonkeyPatch) -> None:
     cfg = load_config()
+    # Empty string wins over .env because load_dotenv does not override existing keys.
+    monkeypatch.setenv("GOOGLE_DOCS_DOCUMENT_ID", "")
     monkeypatch.setattr(cfg.mcp, "docs_document_id", "")
-    monkeypatch.delenv("GOOGLE_DOCS_DOCUMENT_ID", raising=False)
     with pytest.raises(McpError, match="Missing Google Doc id"):
         publish_docs_via_mcp(cfg, _pulse(), client=McpHttpClient.__new__(McpHttpClient))

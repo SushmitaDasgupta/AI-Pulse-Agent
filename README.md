@@ -2,7 +2,7 @@
 
 Weekly one-page pulse from **public** Google Play reviews for ChatGPT (`com.openai.chatgpt`).
 
-> **Status: P1 ingest + P2 pulse ready — P3 MCP Docs append + Gmail draft wired to Railway.**
+> **Status: P1–P3 ready. P4 weekly scheduler = GitHub Actions cron → full `pulsator run`.**
 
 ## Review data source
 
@@ -38,11 +38,11 @@ Optional: copy `.env.example` → `.env` and set **both** `GROQ_API_KEY` (classi
 ## Acquire notes
 
 ```bash
-# Offline / CI (default in config.yaml)
+# Offline / CI (override with ACQUIRE_MODE=file)
 # acquire.mode: file
 
 # Live public fetch
-# Set acquire.mode: live in config.yaml, then:
+# Set acquire.mode: live in config.yaml (or ACQUIRE_MODE=live), then:
 pulsator run --stage ingest
 # On live failure, acquire retries then falls back to the latest data/raw export.
 ```
@@ -54,6 +54,9 @@ Raw exports include provenance: `app_id`, `lang`/`country`, `play_url`, `fetched
 ```bash
 pulsator run --help
 pulsator stages
+
+# Full weekly path (ingest + pulse + Doc + Gmail draft)
+pulsator run --require-mcp
 
 # Ingest only (acquire → normalize → scrub)
 pulsator run --stage ingest
@@ -75,6 +78,23 @@ pulsator run --stage publish_docs
 pulsator run --stage draft_email
 ```
 
+## Phase 4 — Weekly scheduler
+
+Unattended Monday run via GitHub Actions (external cron → CLI; no in-process daemon):
+
+| Item | Value |
+| --- | --- |
+| Workflow | [`.github/workflows/weekly-pulse.yml`](.github/workflows/weekly-pulse.yml) |
+| Cadence | Mondays **09:00 UTC** |
+| Command | `pulsator run --require-mcp` |
+| Manual | Actions → **Weekly Pulse** → Run workflow (`live` or `file` acquire) |
+| Artifacts | `out/` + cleaned corpus uploaded for **28 days** |
+| Alt | Railway cron / `POST /run` with the same secrets |
+
+**GitHub secrets:** `GROQ_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_DOCS_DOCUMENT_ID`, `EMAIL_TO` (optional: `MCP_SERVER_URL`, `MCP_API_KEY`, `ACQUIRE_MAX_REVIEWS`).
+
+Re-running the same ISO week **appends another Doc section**. Email remains **draft-only** (send manually). Details: [`docs/runbook.md`](docs/runbook.md).
+
 ## Phase 3 MCP (Railway)
 
 | Item | Value |
@@ -82,7 +102,7 @@ pulsator run --stage draft_email
 | MCP URL | `https://mcp-server-google-production.up.railway.app/mcp` |
 | Tools used | `google_docs_append_content`, `gmail_draft_email` |
 | Env | `MCP_SERVER_URL`, `MCP_API_KEY` (if set), `GOOGLE_DOCS_DOCUMENT_ID`, `EMAIL_TO` |
-| Config | `mcp.docs_document_id` (optional), `langchain.require_mcp` |
+| Config | `mcp.docs_document_id` (optional), `langchain.require_mcp` / `REQUIRE_MCP` |
 
 The MCP server **appends** to an existing Google Doc (it cannot create one). Create a Doc once, paste its id into `.env`, then run publish/draft stages.
 
@@ -99,6 +119,7 @@ The MCP server **appends** to an existing Google Doc (it cannot create one). Cre
 | Validate quote/theme/word gates | `validate` | P2 |
 | Publish Google Doc via MCP | `publish_docs` | P3 |
 | Create Gmail draft via MCP | `draft_email` | P3 |
+| Weekly cron → full graph | GitHub Actions | P4 |
 
 **LangGraph:** `acquire → normalize → scrub → theme → select → compose → validate → publish → draft_email`
 
@@ -124,10 +145,11 @@ PULSATOR_LIVE=1 pytest -q -m network
 
 ## Config
 
-See `config.yaml` for `play_url`, `app_id`, `acquire`, lookback, caps, and LangChain settings.
+See `config.yaml` for `play_url`, `app_id`, `acquire`, lookback, caps, and LangChain settings. Scheduler overrides: `ACQUIRE_MODE`, `ACQUIRE_MAX_REVIEWS`, `REQUIRE_MCP`.
 
 ## Docs
 
 - [`docs/problemStatement.md`](docs/problemStatement.md)
 - [`docs/architecture.md`](docs/architecture.md)
 - [`docs/implementation-plan.md`](docs/implementation-plan.md)
+- [`docs/runbook.md`](docs/runbook.md)

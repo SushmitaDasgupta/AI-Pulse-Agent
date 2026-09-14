@@ -1,6 +1,10 @@
 # Railway deploy for AI Review Pulsator (CLI batch / cron-friendly).
 # Secrets (GROQ_API_KEY, GEMINI_API_KEY, MCP_*, GOOGLE_DOCS_DOCUMENT_ID, EMAIL_TO)
 # are set in the Railway dashboard — do not commit .env.
+#
+# P4 scheduler default = GitHub Actions (.github/workflows/weekly-pulse.yml).
+# Alt: Railway cron / one-off → `pulsator run --require-mcp`
+#   (or POST /run on this service with REQUIRE_MCP=true in the service env).
 
 [build]
 builder = "DOCKERFILE"

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, Literal
 
@@ -157,8 +158,44 @@ class AppConfig(BaseModel):
         return self.resolve(self.acquire.fixture_path)
 
 
+def _env_truthy(name: str) -> bool | None:
+    """Return True/False if env is set to a known boolean string; else None."""
+    raw = (os.getenv(name) or "").strip().lower()
+    if not raw:
+        return None
+    if raw in ("1", "true", "yes", "on"):
+        return True
+    if raw in ("0", "false", "no", "off"):
+        return False
+    return None
+
+
+def apply_env_overrides(cfg: AppConfig) -> AppConfig:
+    """Apply scheduler / operator env overrides onto a loaded config.
+
+    Used by weekly cron (GitHub Actions / Railway) without editing config.yaml:
+
+    - ``ACQUIRE_MODE`` = ``live`` | ``file``
+    - ``ACQUIRE_MAX_REVIEWS`` = int (optional cap for scrape)
+    - ``REQUIRE_MCP`` = truthy → hard-fail Doc/Gmail delivery
+    """
+    mode = (os.getenv("ACQUIRE_MODE") or "").strip().lower()
+    if mode in ("live", "file"):
+        cfg.acquire.mode = mode  # type: ignore[assignment]
+
+    max_reviews = (os.getenv("ACQUIRE_MAX_REVIEWS") or "").strip()
+    if max_reviews.isdigit():
+        cfg.acquire.max_reviews = int(max_reviews)
+
+    require_mcp = _env_truthy("REQUIRE_MCP")
+    if require_mcp is not None:
+        cfg.langchain.require_mcp = require_mcp
+
+    return cfg
+
+
 def load_config(path: str | Path | None = None) -> AppConfig:
-    """Load YAML config into a typed AppConfig."""
+    """Load YAML config into a typed AppConfig (then apply env overrides)."""
     config_path = Path(path) if path else DEFAULT_CONFIG_PATH
     if not config_path.is_absolute():
         config_path = (REPO_ROOT / config_path).resolve()
@@ -172,4 +209,4 @@ def load_config(path: str | Path | None = None) -> AppConfig:
             raise ValueError(f"Config root must be a mapping: {config_path}")
         raw = loaded
 
-    return AppConfig.model_validate(raw)
+    return apply_env_overrides(AppConfig.model_validate(raw))

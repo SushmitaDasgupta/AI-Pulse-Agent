@@ -1,0 +1,97 @@
+# P4 — Weekly Scheduler
+# Runs the full Pulsator graph: acquire → scrub → classify → pulse → Doc append → Gmail draft.
+# Secrets: GROQ_API_KEY, GEMINI_API_KEY, GOOGLE_DOCS_DOCUMENT_ID, EMAIL_TO
+# Optional: MCP_SERVER_URL, MCP_API_KEY
+# Railway MCP server must have GOOGLE_REFRESH_TOKEN (not needed in Actions).
+
+name: Weekly Pulse
+
+on:
+  schedule:
+    # Mondays 09:00 UTC — adjust as needed
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+    inputs:
+      acquire_mode:
+        description: "Play review acquire mode"
+        required: true
+        default: live
+        type: choice
+        options:
+          - live
+          - file
+      require_mcp:
+        description: "Fail the job if Doc/Gmail MCP delivery fails"
+        required: true
+        default: true
+        type: boolean
+
+concurrency:
+  group: weekly-pulse
+  cancel-in-progress: false
+
+jobs:
+  pulse:
+    name: pulsator run (full graph)
+    runs-on: ubuntu-latest
+    # Live Play scrape + dual LLM can take a while
+    timeout-minutes: 360
+    env:
+      # Prefer workflow_dispatch inputs; schedule defaults to live + hard MCP fail
+      ACQUIRE_MODE: ${{ github.event.inputs.acquire_mode || 'live' }}
+      REQUIRE_MCP: ${{ github.event.inputs.require_mcp == 'false' && 'false' || 'true' }}
+      MCP_SERVER_URL: ${{ secrets.MCP_SERVER_URL || 'https://mcp-server-google-production.up.railway.app/mcp' }}
+      MCP_API_KEY: ${{ secrets.MCP_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GOOGLE_DOCS_DOCUMENT_ID: ${{ secrets.GOOGLE_DOCS_DOCUMENT_ID }}
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      # Optional throttle for CI / rescue runs (unset = config.yaml max_reviews)
+      ACQUIRE_MAX_REVIEWS: ${{ secrets.ACQUIRE_MAX_REVIEWS }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Verify required secrets
+        run: |
+          missing=0
+          for key in GROQ_API_KEY GEMINI_API_KEY GOOGLE_DOCS_DOCUMENT_ID EMAIL_TO; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Missing secret: $key"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+          echo "ACQUIRE_MODE=$ACQUIRE_MODE REQUIRE_MCP=$REQUIRE_MCP"
+          echo "EMAIL_TO set; GOOGLE_DOCS_DOCUMENT_ID length=${#GOOGLE_DOCS_DOCUMENT_ID}"
+
+      - name: Run weekly pulse
+        run: pulsator run --require-mcp
+
+      - name: Upload pulse artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pulse-${{ github.run_id }}
+          path: |
+            out/
+            data/processed/reviews.cleaned.json
+            data/processed/reviews.cleaned.csv
+          if-no-files-found: warn
+          # Keep ~4 weekly runs of deliverables
+          retention-days: 28

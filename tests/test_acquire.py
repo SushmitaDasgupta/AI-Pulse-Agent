@@ -13,8 +13,17 @@ from src.ingest.acquire import acquire, fetch_live_reviews, load_file_export, wr
 from src.ingest.pipeline import run_ingest
 
 
-def test_file_mode_loads_fixture():
+def test_file_mode_loads_fixture(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+    monkeypatch.setenv("ACQUIRE_MODE", "file")
     cfg = load_config()
+    # Isolate from large/live raw exports — only the small fixture
+    monkeypatch.setattr(cfg.paths, "raw_dir", str(tmp_path / "raw"))
+    (tmp_path / "raw").mkdir()
+    monkeypatch.setattr(
+        cfg.acquire,
+        "fixture_path",
+        "data/raw/play_reviews_fixture.json",
+    )
     assert cfg.acquire.mode == "file"
     export, path = acquire(cfg)
     assert path.exists()
@@ -24,7 +33,15 @@ def test_file_mode_loads_fixture():
 
 
 def test_run_ingest_file_mode_writes_cleaned(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("ACQUIRE_MODE", "file")
     cfg = load_config()
+    monkeypatch.setattr(cfg.paths, "raw_dir", str(tmp_path / "raw"))
+    (tmp_path / "raw").mkdir()
+    monkeypatch.setattr(
+        cfg.acquire,
+        "fixture_path",
+        "data/raw/play_reviews_fixture.json",
+    )
     # Redirect artifact writes into tmp
     monkeypatch.setattr(cfg.paths, "normalized_reviews", str(tmp_path / "normalized.json"))
     monkeypatch.setattr(cfg.paths, "cleaned_reviews", str(tmp_path / "cleaned.json"))
@@ -36,8 +53,8 @@ def test_run_ingest_file_mode_writes_cleaned(tmp_path: Path, monkeypatch: pytest
     assert result.normalized_path and result.normalized_path.exists()
     assert result.cleaned is not None
     assert result.cleaned.counts["fetched"] == 8
-    assert result.cleaned.counts["in_window"] == 7  # excludes Jan 2026
-    assert result.cleaned.counts["cleaned"] == 6  # drops empty body
+    assert result.cleaned.counts["in_window"] == 6  # excludes Jan 2026 + Jul 5 (outside 8w)
+    assert result.cleaned.counts["cleaned"] == 5  # drops empty body
     assert result.cleaned.window.start <= min(r.date for r in result.cleaned.reviews)
     payload = result.cleaned.model_dump()
     blob = str(payload)

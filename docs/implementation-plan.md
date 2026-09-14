@@ -4,7 +4,7 @@
 
 This plan turns [`problemStatement.md`](./problemStatement.md) and [`architecture.md`](./architecture.md) into an executable build sequence.
 
-**Outcome at the end of all phases:** a Python + LangChain weekly runner that **fetches public reviews from the ChatGPT Google Play listing** ([store link](https://play.google.com/store/apps/details?id=com.openai.chatgpt&hl=en_IN), app id `com.openai.chatgpt`), themes them (≤5), writes a ≤250-word pulse (Top 3 themes, 3 verbatim quotes, 3 actions), publishes it to Google Docs via MCP, and creates a Gmail draft via MCP — with no PII and no Play Console / login-gated scraping.
+**Outcome at the end of all phases:** a Python + LangChain weekly runner that **fetches public reviews from the ChatGPT Google Play listing** ([store link](https://play.google.com/store/apps/details?id=com.openai.chatgpt&hl=en_IN), app id `com.openai.chatgpt`), themes them (≤5), writes a ≤250-word pulse (Top 3 themes, 3 verbatim quotes, 3 actions), publishes it to Google Docs via MCP, and creates a Gmail draft via MCP — on a **scheduled weekly cadence** — with no PII and no Play Console / login-gated scraping.
 
 ---
 
@@ -55,7 +55,8 @@ flowchart LR
   P0[P0 Skeleton] --> P1[P1 Ingest & Scrub]
   P1 --> P2[P2 LangChain Pulse]
   P2 --> P3[P3 MCP Delivery]
-  P3 --> P4[P4 Harden & Runbook]
+  P3 --> P4[P4 Weekly Scheduler]
+  P4 --> P5[P5 Harden & Runbook]
 ```
 
 | Phase | Goal | Unlocks success criteria |
@@ -64,9 +65,10 @@ flowchart LR
 | **P1** | Fetch from public Play listing + scrub → cleaned corpus | Import reviews; privacy baseline |
 | **P2** | Dual-LLM pulse (Groq classify + Gemini generate) on cleaned corpus | Themes ≤5; one-pager with quotes/actions |
 | **P3** | Docs + Gmail via MCP tools | Publish Doc; draft email |
-| **P4** | Tests, observability, operator docs | Full checklist reliability |
+| **P4** | Weekly cron that runs full pipeline unattended | Recurring acquire → classify → pulse → Doc + email |
+| **P5** | Tests, observability, operator docs | Full checklist reliability |
 
-**Suggested sequencing:** finish each phase’s exit criteria before starting the next. P3 can be prototyped in parallel with late P2 only if `out/pulse.md` contracts are already stable.
+**Suggested sequencing:** finish each phase’s exit criteria before starting the next. P3 can be prototyped in parallel with late P2 only if `out/pulse.md` contracts are already stable. Start **P4 only after** live P3 smoke (Doc append + Gmail draft) succeeds.
 
 ---
 
@@ -212,7 +214,8 @@ Offline / CI: keyword catalog classification + template quotes/actions/compose s
 | **P1** | **No** | Cleaned corpus (`reviews.cleaned.json` / `.csv`) is unchanged |
 | **P2** | **Yes** | Themes / selection / pulse were produced without Groq+Gemini split; re-run `pulsator run --stage pulse` after keys are set |
 | **P3** | N/A until started | Will consume regenerated `out/pulse.*` |
-| **P4** | Later | Add dual-provider smoke tests when hardening |
+| **P4** | After P3 live smoke | Schedule full `pulsator run` weekly |
+| **P5** | Later | Add dual-provider smoke tests when hardening |
 
 ### Phase-1 corpus snapshot (as of cleaned export)
 
@@ -415,14 +418,14 @@ validate (local gates)
 2. [x] Implement Streamable HTTP MCP client + delivery wrappers
 3. [x] Wire `publish` then `draft_email` after validators
 4. [x] Lock doc strategy = **append to configured rolling doc**; email = **Doc link + summary**
-5. [ ] Smoke-test on live Railway: Doc append + Gmail draft visible; IDs in `run.log`
+5. [x] Smoke-test on live Railway: Doc append + Gmail draft visible; IDs in `run.log`
 6. [x] Mocked tests (`tests/test_mcp_delivery.py`)
 
 ### Exit criteria
 
 - [x] Integration path is MCP-first (no Google REST client in Pulsator)
-- [ ] Live: Google Doc updated via `google_docs_append_content` with pulse content
-- [ ] Live: Gmail draft via `gmail_draft_email` to self/alias with Doc pointer
+- [x] Live: Google Doc updated via `google_docs_append_content` with pulse content
+- [x] Live: Gmail draft via `gmail_draft_email` to self/alias with Doc pointer
 - [x] IDs persisted into `pulse.json` / `run.log` on success
 - [x] Soft-fail when `require_mcp: false` and MCP/config incomplete
 
@@ -447,11 +450,107 @@ validate (local gates)
 
 ---
 
-## P4 — Harden & Runbook
+## P4 — Weekly Scheduler
 
 ### Objective
 
-Make the weekly run reliable, inspectable, and operable by a PM/engineer without tribal knowledge.
+Run the **full** Pulsator pipeline on a fixed weekly cadence without an operator at the keyboard: download new public Play reviews → scrub → classify/theme → generate pulse → append Google Doc → create Gmail draft.
+
+P4 does **not** invent a second agent. It schedules the existing LangGraph path (`pulsator run`) that already chains P1 → P2 → P3.
+
+### Weekly job (locked flow)
+
+```text
+cron (weekly)
+  → pulsator run
+      acquire → normalize → scrub
+      → theme → select → compose → validate
+      → publish (google_docs_append_content)
+      → draft_email (gmail_draft_email)
+```
+
+| Step | Stage(s) | Output |
+| --- | --- | --- |
+| Download new reviews | `acquire` (+ normalize/scrub) | Fresh `data/raw/` + `data/processed/reviews.cleaned.*` for the lookback window |
+| Classify + report | `theme` → `select` → `compose` → `validate` | `out/themes.json`, `out/selection.json`, `out/pulse.md`, `out/pulse.json` |
+| Deliver | `publish` → `draft_email` | Rolling Doc section + unsent Gmail draft (Doc URL + short summary) |
+
+### Scheduler mechanism (locked default)
+
+| Item | Choice |
+| --- | --- |
+| **Trigger** | External cron → CLI (not an in-process sleep loop) |
+| **Default host** | **GitHub Actions** `schedule` (e.g. Mondays `0 9 * * 1` UTC) running `pulsator run` |
+| **Alt host** | Railway cron / one-off job against the same CLI image (`railway.toml` already notes cron-friendly deploy) |
+| **Manual override** | `workflow_dispatch` (or Railway “run once”) for mid-week re-runs |
+| **Secrets** | `GROQ_API_KEY`, `GEMINI_API_KEY`, `MCP_SERVER_URL`, `MCP_API_KEY` (if any), `GOOGLE_DOCS_DOCUMENT_ID`, `EMAIL_TO` — plus Railway-side `GOOGLE_REFRESH_TOKEN` on the MCP server |
+
+**Why external cron:** keeps Pulsator a batch CLI; avoids an always-on worker/database (still out of scope until a later product decision). Harden (P5) stays focused on tests/runbook, not a long-lived service.
+
+### Scope
+
+**In**
+
+- Workflow/job definition that invokes the **full** graph end-to-end each week
+- Config/docs for cadence, timezone, and required secrets
+- Artifact retention policy for scheduled runs (`data/raw/`, `out/`) — at least keep last N weeks or upload CI artifacts
+- Failure notifications: non-zero exit or MCP hard-fail should surface (Actions failure email / Railway alert)
+- Idempotency notes: re-running the same ISO week appends another Doc section unless operator skips `publish` / uses a stage filter
+- `langchain.require_mcp: true` recommended for scheduled production runs so silent soft-fail does not look like success
+
+**Out**
+
+- In-process APScheduler / Celery / always-on daemon inside the Pulsator app
+- Auto-**send** via `gmail_send_email` (P3 lock remains: **draft only**; human sends)
+- New Doc per week via MCP create (still blocked; rolling append)
+- Replacing P1/P2/P3 logic — scheduler only orchestrates timing
+
+### Tasks
+
+1. [x] Add GitHub Actions workflow (or Railway cron) with weekly `schedule` + `workflow_dispatch`
+2. [x] Wire env/secrets for acquire + dual LLM + MCP delivery
+3. [x] Document cadence, lookback, and “what a weekly run does” in README / runbook stub
+4. [x] Decide artifact retention (CI upload vs volume) for `out/` + raw exports
+5. [x] Dry-run one scheduled-path execution (manual dispatch) that completes Doc append + Gmail draft
+6. [x] Confirm failure visibility when acquire/LLM/MCP fails
+
+### Exit criteria
+
+- [x] Cron (or manual dispatch of the same job) runs `pulsator run` without a local operator
+- [x] Weekly path downloads/refreshes reviews from the public ChatGPT Play listing (or documented file fallback)
+- [ ] Classification + pulse artifacts regenerate for that run *(enable after Actions secrets + first `workflow_dispatch`)*
+- [x] Google Doc gains a new dated section; Gmail draft appears for `EMAIL_TO` *(local `--require-mcp` dry-run)*
+- [x] Failed runs are visible (CI/job red) when `require_mcp: true` or hard validators fail
+- [x] Operator can still run the same pipeline locally via `pulsator run`
+
+### Decision checkpoint
+
+| Decision | Choice |
+| --- | --- |
+| Cadence | Weekly (default Monday UTC; adjustable in workflow) |
+| Orchestration | External cron → `pulsator run` (full graph) |
+| Host | GitHub Actions first; Railway cron acceptable equivalent |
+| Email | Still **draft** via MCP (human sends) |
+| Docs | Still **append** to rolling Doc |
+| Production MCP | Prefer `require_mcp: true` on the scheduled job |
+
+### Risks
+
+| Risk | Mitigation |
+| --- | --- |
+| Play scrape rate limits / empty window | Keep `acquire.mode: file` fallback; alert on empty cleaned corpus |
+| Groq TPM/RPM on unattended runs | Existing stratified sample + throttle; fail job if classify hard-errors |
+| MCP token expiry (`GOOGLE_REFRESH_TOKEN`) | Monitor AUTHENTICATION_REQUIRED; re-auth MCP server; `require_mcp` so job fails loud |
+| Duplicate Doc sections on re-run | Document ISO-week re-run behavior; optional stage skip for publish-only recovery |
+| Secret sprawl in CI | Single Actions environment; never commit `.env` |
+
+---
+
+## P5 — Harden & Runbook
+
+### Objective
+
+Make the weekly run (including the P4 scheduled path) reliable, inspectable, and operable by a PM/engineer without tribal knowledge.
 
 ### Scope
 
@@ -460,7 +559,7 @@ Make the weekly run reliable, inspectable, and operable by a PM/engineer without
 - Automated tests: normalize, scrub, quote substring, word count, theme cap, graph order (validator blocks tools on bad quotes)
 - Clear non-zero exits on hard constraint failures
 - Optional LangSmith tracing flag in config
-- Operator README / runbook: acquire → env keys → `pulsator run` → verify pulse → confirm Doc/draft → send manually
+- Operator README / runbook: acquire → env keys → `pulsator run` → verify pulse → confirm Doc/draft → send manually; plus **scheduled** weekly job ops
 - Weekly checklist mapped to problem success criteria
 - Privacy checklist before share (no PII in Doc/email)
 - Pin model name in config; prompt versions noted
@@ -469,20 +568,21 @@ Make the weekly run reliable, inspectable, and operable by a PM/engineer without
 **Out**
 
 - New features beyond v1 success criteria
-- Always-on service / database
+- Always-on service / database (scheduler stays external cron → CLI)
 
 ### Tasks
 
 1. Expand unit/integration tests to architecture testing table.
 2. Add `--require-mcp` / config parity and exit codes.
-3. Write runbook section in README (or `docs/runbook.md` if preferred later).
-4. Dry-run a full weekly simulation end-to-end.
+3. Write runbook section in README (or `docs/runbook.md` if preferred later), including P4 cron ops.
+4. Dry-run a full weekly simulation end-to-end (local + one scheduled dispatch).
 5. Close the success-criteria checklist explicitly.
 
 ### Exit criteria
 
 - [ ] Test suite covers scrub, quote fidelity, word budget, theme cap
 - [ ] Full run documented and reproduced once on a clean machine/venv
+- [ ] Scheduled weekly path documented and verified at least once
 - [ ] All problem-statement success criteria checked off
 - [ ] Risks from architecture (scrape, PII, hallucinated quotes) have concrete mitigations in code or docs
 
@@ -490,13 +590,14 @@ Make the weekly run reliable, inspectable, and operable by a PM/engineer without
 
 ## Cross-Phase Workstreams
 
-| Workstream | P0 | P1 | P2 | P3 | P4 |
-| --- | --- | --- | --- | --- | --- |
-| Deterministic data plane | stub | **build** | consume | consume | test |
-| LangChain agent | stub graph | — | **build** | tools | harden |
-| MCP delivery | — | — | mock optional | **build** | smoke + mocks |
-| Privacy | policy in docs | **scrub** | pre-LLM only cleaned data | verify artifacts | checklist |
-| Docs for operators | README stub | acquire notes | — | MCP setup | **runbook** |
+| Workstream | P0 | P1 | P2 | P3 | P4 | P5 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Deterministic data plane | stub | **build** | consume | consume | refresh weekly | test |
+| LangChain agent | stub graph | — | **build** | tools | scheduled full run | harden |
+| MCP delivery | — | — | mock optional | **build** | weekly Doc + draft | smoke + mocks |
+| Scheduler / cron | — | — | — | — | **build** | runbook |
+| Privacy | policy in docs | **scrub** | pre-LLM only cleaned data | verify artifacts | unattended scrub | checklist |
+| Docs for operators | README stub | acquire notes | — | MCP setup | cron setup | **runbook** |
 
 ---
 
@@ -510,9 +611,10 @@ Matches the problem statement checklist:
 - [ ] One-page weekly pulse (≤250 words) with Top 3 themes, 3 verbatim quotes, 3 action ideas
 - [ ] Pulse published to Google Docs via MCP
 - [ ] Draft email created in Gmail via MCP (self/alias), containing or linking to that pulse
+- [ ] Weekly schedule refreshes reviews, regenerates the pulse, and delivers Doc + draft without a manual kickoff
 - [ ] No PII in any deliverable; no ToS-violating scraping; MCP-first Docs/Gmail integration
 
-**Operational Done:** an operator can run `pulsator run` (which acquires from the public ChatGPT Play listing, or uses a saved export), and with MCP connected receive a Doc + Gmail draft without Play Console access or custom Google Docs/Gmail API code.
+**Operational Done:** an operator (or weekly cron) can run `pulsator run` (which acquires from the public ChatGPT Play listing, or uses a saved export), and with MCP connected receive a Doc + Gmail draft without Play Console access or custom Google Docs/Gmail API code.
 
 ---
 
@@ -528,6 +630,8 @@ Resolve early to avoid rework:
 | P3 | Doc strategy | **Rolling Doc + `google_docs_append_content`** (Railway MCP has no create tool) |
 | P3 | Email body | **Doc link + short summary** (keeps draft short) |
 | P3 | MCP bridge | Sync Streamable HTTP client → `https://mcp-server-google-production.up.railway.app/mcp` |
+| P4 | Scheduler | **GitHub Actions weekly cron** → `pulsator run` (Railway cron OK as equivalent) |
+| P4 | Scheduled email | Still **draft only** (human sends) |
 
 ---
 
@@ -539,7 +643,8 @@ Resolve early to avoid rework:
 | P1 | M | P0; network access to public Play listing (or saved `data/raw/` export) |
 | P2 | L | P1 cleaned corpus (~9.4k); `GROQ_API_KEY` + `GEMINI_API_KEY` |
 | P3 | M–L | P2 contracts; Docs/Gmail MCP availability |
-| P4 | M | P2–P3 behavior frozen |
+| P4 | M | Live P3 smoke; CI/Railway secrets for full pipeline |
+| P5 | M | P2–P4 behavior frozen |
 
 S/M/L are relative only (small / medium / large). Calendar time depends on MCP setup and review-data access.
 
@@ -552,15 +657,14 @@ S/M/L are relative only (small / medium / large). Calendar time depends on MCP s
 | P1 | `acquire` (Play listing → `data/raw/`), `normalize`, `scrub` | Pull recent reviews from store link |
 | P2 | `theme`, `select`, `compose` | Cluster cleaned CSV/JSON + distill one-page note |
 | P3 | `publish_docs`, `draft_email` | Google Docs + Gmail draft |
-| P4 | validators, run.log, runbook | Reliable weekly pulse your team can scan |
+| P4 | scheduled full graph (`pulsator run`) | Recurring weekly pulse without manual kickoff |
+| P5 | validators, run.log, runbook | Reliable weekly pulse your team can scan |
 
 ---
 
 ## Next Action
 
-1. Set Pulsator `.env`: `MCP_SERVER_URL`, `MCP_API_KEY` (if Railway requires it), `GOOGLE_DOCS_DOCUMENT_ID`.  
-2. Set `EMAIL_TO` in `.env` to a real inbox/alias.  
-3. With P2 artifacts present, smoke-test delivery:
-   `pulsator run --stage publish_docs` then `pulsator run --stage draft_email`  
-4. Confirm Doc append + Gmail draft IDs in `out/run.log` / `out/pulse.json`.  
-5. Continue P1 resume later for full 8-week coverage; P4 hardens tests/runbook.
+1. Add GitHub Actions secrets: `GROQ_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_DOCS_DOCUMENT_ID`, `EMAIL_TO` (optional MCP_*).  
+2. Dry-run P4: Actions → **Weekly Pulse** → Run workflow (`acquire_mode=file` for a fast path, or `live` for full refresh).  
+3. Confirm Doc append + Gmail draft + uploaded artifacts; then leave the Monday cron enabled.  
+4. Continue P1 resume later for full 8-week coverage; **P5** hardens tests/runbook.

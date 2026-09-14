@@ -11,6 +11,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 def _run_pulse() -> None:
     from src.agent.graph import run_graph
 
+    # Prefer hard MCP fail on Railway-triggered runs (P4 alt path).
+    os.environ.setdefault("REQUIRE_MCP", "true")
     try:
         result = run_graph(config_path="config.yaml", stage=None)
         print("[serve] pulse complete:", result.get("messages"))

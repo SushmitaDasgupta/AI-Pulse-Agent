@@ -1,4 +1,19 @@
-# AI Review Pulsator — runtime config
+# Weekly scheduler (P4)
+
+# Cadence is owned by GitHub Actions (see .github/workflows/weekly-pulse.yml).
+# Defaults: Mondays 09:00 UTC → `pulsator run --require-mcp`
+# Manual: Actions → Weekly Pulse → Run workflow (acquire_mode live|file)
+#
+# Env overrides (no config edit needed for cron):
+#   ACQUIRE_MODE=live|file
+#   ACQUIRE_MAX_REVIEWS=<int>
+#   REQUIRE_MCP=true|false
+#
+# schedule:
+#   cadence: weekly
+#   cron_utc: "0 9 * * 1"
+#   command: pulsator run --require-mcp
+#   artifact_retention_days: 28
 
 app_id: com.openai.chatgpt
 play_url: https://play.google.com/store/apps/details?id=com.openai.chatgpt&hl=en_IN
@@ -9,6 +24,7 @@ country: in
 acquire:
   # live = google-play-scraper against public listing (falls back to file on failure)
   # file = latest data/raw/play_reviews_*.json or fixture_path (CI / offline)
+  # Override per run with ACQUIRE_MODE=live|file
   mode: live
   client: google-play-scraper # public Play listing reviews; no login / no Play Console
   sort: newest
@@ -52,6 +68,7 @@ paths:
 langchain:
   tracing: false
   # When true, publish/draft_email failures abort the run (after local pulse exists)
+  # Scheduled weekly job sets REQUIRE_MCP=true / --require-mcp
   require_mcp: false
   # Dual-LLM split (P2):
   #   classify  → Groq labels reviews into the theme catalog
