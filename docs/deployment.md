@@ -115,15 +115,23 @@ If you already imported the repo without Root Directory `web`:
 
 Do **not** point Vercel at the repo root — that path is for Railway (`Dockerfile`), not Vercel.
 
-### Environment variables (optional / future)
+### Environment variables (for live Railway wiring)
 
-Not required for the current UI-only seed. When the frontend calls Railway:
+Do **not** create a `VITE_*` variable in the Vercel UI — that forces the public “Config” type and often blocks saving.
+
+Instead:
+
+1. Delete any failed `VITE_API_BASE_URL` entry if present.
+2. **Add New** → name: `API_BASE_URL` (no `VITE_` prefix).
+3. Value: `https://YOUR-SERVICE.up.railway.app` (no trailing slash).
+4. Leave it as a normal / Sensitive secret — that is fine. Vite maps it into the client bundle at **build** time via `web/vite.config.ts`.
+5. Save → **Redeploy** (required; build-time inline).
 
 | Variable | Example | Purpose |
 | --- | --- | --- |
-| `VITE_API_BASE_URL` | `https://YOUR-SERVICE.up.railway.app` | Base URL for `GET /health`, `POST /run`, etc. |
+| `API_BASE_URL` | `https://YOUR-SERVICE.up.railway.app` | Railway pulse service origin for UI → API calls |
 
-Rebuild after adding `VITE_*` vars (they are inlined at build time).
+Local optional: `web/.env` with `API_BASE_URL=…` or `VITE_API_BASE_URL=…`.
 
 ### Local preview of the production build
 
@@ -139,7 +147,7 @@ npm run preview
 ## 3. Connect frontend ↔ backend (when wiring live)
 
 1. Deploy Railway first; confirm `GET /health`.
-2. Set `VITE_API_BASE_URL` on Vercel to the Railway HTTPS origin (no trailing slash).
+2. Set `API_BASE_URL` on Vercel to the Railway HTTPS origin (no trailing slash) — see §2.
 3. Redeploy the Vercel project.
 4. If the browser calls Railway directly, add CORS headers on `src.serve` (or put a small API proxy on Vercel) — **not implemented yet**.
 
@@ -184,7 +192,7 @@ Create the rolling Google Doc once; put its id in `GOOGLE_DOCS_DOCUMENT_ID` on t
 - [ ] Root Directory = `web`
 - [ ] Build succeeds (`tsc -b && vite build`)
 - [ ] Site loads at the Vercel URL
-- [ ] Optional later: `VITE_API_BASE_URL` → Railway origin + redeploy
+- [ ] Optional later: `API_BASE_URL` → Railway origin + redeploy
 
 **Secrets hygiene**
 
