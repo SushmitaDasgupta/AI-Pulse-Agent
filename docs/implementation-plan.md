@@ -4,7 +4,7 @@
 
 This plan turns [`problemStatement.md`](./problemStatement.md) and [`architecture.md`](./architecture.md) into an executable build sequence.
 
-**Outcome at the end of all phases:** a Python + LangChain weekly runner that **fetches public reviews from the ChatGPT Google Play listing** ([store link](https://play.google.com/store/apps/details?id=com.openai.chatgpt&hl=en_IN), app id `com.openai.chatgpt`), themes them (≤5), writes a ≤250-word pulse (Top 3 themes, 3 verbatim quotes, 3 actions), publishes it to Google Docs via MCP, and creates a Gmail draft via MCP — on a **scheduled weekly cadence** — with no PII and no Play Console / login-gated scraping.
+**Outcome at the end of all phases:** a Python + LangChain weekly runner that **fetches public reviews from the ChatGPT Google Play listing** ([store link](https://play.google.com/store/apps/details?id=com.openai.chatgpt&hl=en_IN), app id `com.openai.chatgpt`), themes them (≤5), writes a ≤250-word pulse (Top 3 themes, 3 verbatim quotes, 3 actions), publishes it to Google Docs via MCP, and creates a Gmail draft via MCP — on a **scheduled weekly cadence** — with no PII and no Play Console / login-gated scraping. A **React web UI** (`web/`) lets stakeholders scan the pulse and compose/send email from the browser (P6; UI-only seed first, optional API wire-up later).
 
 ---
 
@@ -57,6 +57,7 @@ flowchart LR
   P2 --> P3[P3 MCP Delivery]
   P3 --> P4[P4 Weekly Scheduler]
   P4 --> P5[P5 Harden & Runbook]
+  P5 --> P6[P6 Frontend React]
 ```
 
 | Phase | Goal | Unlocks success criteria |
@@ -67,8 +68,9 @@ flowchart LR
 | **P3** | Docs + Gmail via MCP tools | Publish Doc; draft email |
 | **P4** | Weekly cron that runs full pipeline unattended | Recurring acquire → classify → pulse → Doc + email |
 | **P5** | Tests, observability, operator docs | Full checklist reliability |
+| **P6** | React web UI for scanning the pulse + compose/send email | Stakeholder-readable surface for the weekly note |
 
-**Suggested sequencing:** finish each phase’s exit criteria before starting the next. P3 can be prototyped in parallel with late P2 only if `out/pulse.md` contracts are already stable. Start **P4 only after** live P3 smoke (Doc append + Gmail draft) succeeds.
+**Suggested sequencing:** finish each phase’s exit criteria before starting the next. P3 can be prototyped in parallel with late P2 only if `out/pulse.md` contracts are already stable. Start **P4 only after** live P3 smoke (Doc append + Gmail draft) succeeds. **P6** can ship as a UI-only shell seeded from `out/pulse.json` once P2 contracts are stable; live API wiring is optional follow-on.
 
 ---
 
@@ -588,16 +590,69 @@ Make the weekly run (including the P4 scheduled path) reliable, inspectable, and
 
 ---
 
+## P6 — Frontend (React)
+
+### Objective
+
+Ship a stakeholder-facing web UI so Product / Support / Leadership can **scan the weekly pulse**, open the rolling Google Doc, and **compose + send email** from the browser — matching the Stitch design in `stitch_ai_review_pulsator_ui/`.
+
+### Scope
+
+**In**
+
+- Vite + React + TypeScript + Tailwind app under `web/`
+- Visual system from Stitch `executive_pulse/DESIGN.md` (paper surface, teal primary `#0F6B5C` / `#005145`, coral accent, Plus Jakarta Sans + Inter)
+- Weekly Pulse home: meta strip, Top 3 themes, 3 verbatim quotes, 3 action ideas, Doc archive bar
+- **Send email** modal: To / Subject / Body prefilled from pulse; primary CTA **Send now** + success toast (UI simulation in v1)
+- **Run weekly pulse** → simulated pipeline stage chips (`Acquire → … → Email`)
+- Seed data aligned to `out/pulse.json` (real themes / quotes / actions / Doc URL)
+- `web/README.md` run instructions
+
+**Out**
+
+- Live backend / MCP wiring (no `POST /run`, no real Gmail send in P6)
+- Stitch-only extras not in the Python product: Regression Radar, Sentiment Vector, Reviews Stream, Net Sentiment Delta, Jira links
+- Auth, multi-product switcher, Play Console controls
+
+### Tasks
+
+1. Scaffold `web/` with Vite React TS + Tailwind; apply Stitch color / type tokens.
+2. Implement Weekly Pulse layout from `ai_review_pulsator_weekly_pulse/`.
+3. Implement Send Email modal + toast from `ai_review_pulsator_send_email_modal/` (**Send now**).
+4. Implement pipeline running overlay from `ai_review_pulsator_pipeline_running_state/` as a UI simulation.
+5. Seed from current pulse artifact; document `npm run dev` / `npm run build`.
+
+### Exit criteria
+
+- [x] `web/` builds (`npm run build`) and runs locally (`npm run dev`)
+- [x] Home shows Top 3 themes, 3 quotes, 3 actions, Doc link, word/window meta
+- [x] Send email modal supports compose + **Send now** with success feedback (simulated)
+- [x] Run weekly pulse shows stage progress (simulated)
+- [x] Scope excludes non-product Stitch nav / inventeds metrics
+- [ ] Optional follow-on: wire Run/Send to `src/serve.py` + MCP (out of P6)
+
+### Design source
+
+| Asset | Path |
+| --- | --- |
+| Tokens / brand | `stitch_ai_review_pulsator_ui/executive_pulse/DESIGN.md` |
+| Weekly pulse | `stitch_ai_review_pulsator_ui/ai_review_pulsator_weekly_pulse/` |
+| Send email | `stitch_ai_review_pulsator_ui/ai_review_pulsator_send_email_modal/` |
+| Pipeline running | `stitch_ai_review_pulsator_ui/ai_review_pulsator_pipeline_running_state/` |
+
+---
+
 ## Cross-Phase Workstreams
 
-| Workstream | P0 | P1 | P2 | P3 | P4 | P5 |
-| --- | --- | --- | --- | --- | --- | --- |
-| Deterministic data plane | stub | **build** | consume | consume | refresh weekly | test |
-| LangChain agent | stub graph | — | **build** | tools | scheduled full run | harden |
-| MCP delivery | — | — | mock optional | **build** | weekly Doc + draft | smoke + mocks |
-| Scheduler / cron | — | — | — | — | **build** | runbook |
-| Privacy | policy in docs | **scrub** | pre-LLM only cleaned data | verify artifacts | unattended scrub | checklist |
-| Docs for operators | README stub | acquire notes | — | MCP setup | cron setup | **runbook** |
+| Workstream | P0 | P1 | P2 | P3 | P4 | P5 | P6 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Deterministic data plane | stub | **build** | consume | consume | refresh weekly | test | seed UI |
+| LangChain agent | stub graph | — | **build** | tools | scheduled full run | harden | — |
+| MCP delivery | — | — | mock optional | **build** | weekly Doc + draft | smoke + mocks | UI send (sim) |
+| Scheduler / cron | — | — | — | — | **build** | runbook | — |
+| Privacy | policy in docs | **scrub** | pre-LLM only cleaned data | verify artifacts | unattended scrub | checklist | anonymous quotes in UI |
+| Docs for operators | README stub | acquire notes | — | MCP setup | cron setup | **runbook** | `web/README.md` |
+| Web UI | — | — | — | — | — | — | **build** |
 
 ---
 
@@ -632,6 +687,7 @@ Resolve early to avoid rework:
 | P3 | MCP bridge | Sync Streamable HTTP client → `https://mcp-server-google-production.up.railway.app/mcp` |
 | P4 | Scheduler | **GitHub Actions weekly cron** → `pulsator run` (Railway cron OK as equivalent) |
 | P4 | Scheduled email | Still **draft only** (human sends) |
+| P6 | Frontend | **Vite + React + Tailwind** in `web/`; UI-only seed from `out/pulse.json`; Send now simulated |
 
 ---
 
@@ -645,6 +701,7 @@ Resolve early to avoid rework:
 | P3 | M–L | P2 contracts; Docs/Gmail MCP availability |
 | P4 | M | Live P3 smoke; CI/Railway secrets for full pipeline |
 | P5 | M | P2–P4 behavior frozen |
+| P6 | M | P2 `pulse.json` contract; Stitch export in `stitch_ai_review_pulsator_ui/` |
 
 S/M/L are relative only (small / medium / large). Calendar time depends on MCP setup and review-data access.
 
@@ -659,12 +716,15 @@ S/M/L are relative only (small / medium / large). Calendar time depends on MCP s
 | P3 | `publish_docs`, `draft_email` | Google Docs + Gmail draft |
 | P4 | scheduled full graph (`pulsator run`) | Recurring weekly pulse without manual kickoff |
 | P5 | validators, run.log, runbook | Reliable weekly pulse your team can scan |
+| P6 | React weekly-pulse UI | Scan themes/quotes/actions; Doc link; compose + send email (UI) |
 
 ---
 
 ## Next Action
 
-1. Add GitHub Actions secrets: `GROQ_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_DOCS_DOCUMENT_ID`, `EMAIL_TO` (optional MCP_*).  
-2. Dry-run P4: Actions → **Weekly Pulse** → Run workflow (`acquire_mode=file` for a fast path, or `live` for full refresh).  
-3. Confirm Doc append + Gmail draft + uploaded artifacts; then leave the Monday cron enabled.  
-4. Continue P1 resume later for full 8-week coverage; **P5** hardens tests/runbook.
+1. Frontend: `cd web && npm install && npm run dev` — review Weekly Pulse, Send email, Run simulation against Stitch.  
+2. Add GitHub Actions secrets: `GROQ_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_DOCS_DOCUMENT_ID`, `EMAIL_TO` (optional MCP_*).  
+3. Dry-run P4: Actions → **Weekly Pulse** → Run workflow (`acquire_mode=file` for a fast path, or `live` for full refresh).  
+4. Confirm Doc append + Gmail draft + uploaded artifacts; then leave the Monday cron enabled.  
+5. Optional follow-on: wire `web/` Run/Send to `src/serve.py` + MCP (post-P6).  
+6. Continue P1 resume later for full 8-week coverage; **P5** hardens tests/runbook.

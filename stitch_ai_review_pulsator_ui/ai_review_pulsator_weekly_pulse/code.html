@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: 'class', theme: { extend: { 'colors': { 'tertiary-container': '#645e59', 'surface-bright': '#fcf9f4', 'on-surface-variant': '#3f4946', 'secondary-container': '#fc9174', 'on-surface': '#1c1c19', 'on-secondary': '#ffffff', 'on-tertiary-fixed': '#1f1b17', 'primary-fixed': '#a2f2de', 'secondary-fixed-dim': '#ffb4a1', 'surface-dim': '#dcdad5', 'on-tertiary': '#ffffff', 'tertiary': '#4c4642', 'surface-container-lowest': '#ffffff', 'surface-container-low': '#f6f3ee', 'tertiary-fixed-dim': '#cec5bf', 'on-error': '#ffffff', 'secondary': '#9a442d', 'surface-container-high': '#ebe8e3', 'surface-variant': '#e5e2dd', 'on-primary-container': '#99e8d5', 'outline': '#6f7976', 'surface-container-highest': '#e5e2dd', 'background': '#fcf9f4', 'primary': '#005145', 'surface-container': '#f0ede9', 'on-secondary-fixed': '#3c0800', 'outline-variant': '#bec9c5', 'error': '#ba1a1a', 'on-secondary-container': '#742814', 'inverse-primary': '#86d5c3', 'primary-fixed-dim': '#86d5c3', 'inverse-on-surface': '#f3f0eb', 'secondary-fixed': '#ffdbd2', 'on-error-container': '#93000a', 'surface': '#fcf9f4', 'primary-container': '#0f6b5c', 'on-tertiary-fixed-variant': '#4b4641', 'on-secondary-fixed-variant': '#7c2e19', 'surface-tint': '#0e6a5b', 'on-primary': '#ffffff', 'on-primary-fixed-variant': '#005144', 'on-background': '#1c1c19', 'on-tertiary-container': '#e1d8d2', 'error-container': '#ffdad6', 'on-primary-fixed': '#00201a', 'tertiary-fixed': '#eae1da', 'inverse-surface': '#31302d' }, 'borderRadius': { 'DEFAULT': '0.125rem', 'lg': '0.25rem', 'xl': '0.5rem', 'full': '0.75rem' }, 'spacing': { 'margin-mobile': '1rem', 'space-lg': '1.5rem', 'space-xs': '0.25rem', 'space-sm': '0.5rem', 'space-md': '1rem', 'margin': '2.5rem', 'gutter-mobile': '1rem', 'gutter': '1.5rem', 'space-xl': '2.5rem' }, 'fontFamily': { 'display-lg': ['Plus Jakarta Sans'], 'body-sm': ['Inter'], 'label-md': ['Inter'], 'label-sm': ['Inter'], 'body-lg': ['Inter'], 'headline-md': ['Plus Jakarta Sans'], 'headline-lg': ['Plus Jakarta Sans'], 'display-lg-mobile': ['Plus Jakarta Sans'], 'headline-sm': ['Plus Jakarta Sans'], 'body-md': ['Inter'] }, 'fontSize': { 'display-lg': ['36px', { 'lineHeight': '44px', 'letterSpacing': '-0.03em', 'fontWeight': '700' }], 'body-sm': ['12px', { 'lineHeight': '18px', 'letterSpacing': '0em', 'fontWeight': '400' }], 'label-md': ['13px', { 'lineHeight': '16px', 'letterSpacing': '0.01em', 'fontWeight': '500' }], 'label-sm': ['11px', { 'lineHeight': '14px', 'letterSpacing': '0.04em', 'fontWeight': '600' }], 'body-lg': ['16px', { 'lineHeight': '26px', 'letterSpacing': '-0.011em', 'fontWeight': '400' }], 'headline-md': ['20px', { 'lineHeight': '28px', 'letterSpacing': '-0.015em', 'fontWeight': '600' }], 'headline-lg': ['24px', { 'lineHeight': '32px', 'letterSpacing': '-0.02em', 'fontWeight': '600' }], 'display-lg-mobile': ['28px', { 'lineHeight': '36px', 'letterSpacing': '-0.025em', 'fontWeight': '700' }], 'headline-sm': ['16px', { 'lineHeight': '24px', 'letterSpacing': '-0.01em', 'fontWeight': '600' }], 'body-md': ['14px', { 'lineHeight': '22px', 'letterSpacing': '-0.006em', 'fontWeight': '400' }] } } } }</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-md border-b border-surface-container-highest"><div class="h-20 max-w-6xl mx-auto px-gutter flex items-center justify-between"><div class="flex items-center gap-space-md"><img alt="AI Review Pulsator Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1W4dosp7gVnQcP-EGfOoR1p52l9hWh0LHwF96xT3CyYxEWIR6pJ4C_V356Ui0iHP-lEqI7Nnhi4-6W92ZNxLAXmUh40ri-P71HJ78Noxg7YciH4XGq4X19uslshE6cnH-cet6rr49HnnoFIS3uBZ3NrqCVIfjSXhMDyNjvW0FFf2uJSpJdU39wjsjOhvK7Un8vkyHZdXBYZ6ztSeWnKlGiM8CdVnVio35xJkY_OlWrEiZSoiETwsYLhjSMw"/><div class="flex flex-col"><span class="font-headline-md text-headline-md text-on-surface tracking-tight font-bold">AI Review Pulsator</span><span class="font-body-sm text-body-sm text-on-surface-variant font-medium">ChatGPT (Android) · Google Play</span></div></div><nav class="hidden lg:flex items-center gap-space-lg" data-active-classes="text-primary font-semibold"><a aria-current="page" class="transition-colors text-primary font-semibold" data-path="weekly-pulse" href="#">Weekly Pulse</a><a class="text-on-surface-variant hover:text-on-surface transition-colors font-label-md text-label-md" data-path="regression-radar" href="#">Regression Radar</a><a class="text-on-surface-variant hover:text-on-surface transition-colors font-label-md text-label-md" data-path="sentiment-vector" href="#">Sentiment Vector</a><a class="text-on-surface-variant hover:text-on-surface transition-colors font-label-md text-label-md" data-path="raw-reviews-feed" href="#">Reviews Stream</a></nav><div class="flex items-center gap-space-sm"><button class="inline-flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container-lowest text-on-surface border border-surface-container-highest hover:bg-surface-container-low hover:text-on-surface transition-colors rounded-lg font-label-md text-label-md" type="button"><span class="material-symbols-outlined text-[18px] text-tertiary">refresh</span><span>Run weekly pulse</span></button><button class="inline-flex items-center gap-space-xs px-space-md py-space-sm bg-primary-container text-on-primary hover:bg-primary transition-colors rounded-lg font-label-md text-label-md font-semibold" type="button"><span class="material-symbols-outlined text-[18px] text-on-primary">mail</span><span>Send email</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center ml-space-xs"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-20 min-h-[calc(100vh-4rem)] bg-surface"><div class="max-w-6xl mx-auto px-gutter py-space-lg"><div class="flex flex-col w-full gap-space-lg">
+<!-- Quiet, Refined Hero Meta Strip -->
+<div class="w-full bg-surface-container-lowest rounded-xl shadow-sm px-space-lg py-space-md flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex flex-wrap items-center gap-space-lg">
+<!-- Date Window -->
+<div class="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-primary">calendar_today</span>
+<span class="font-medium text-on-surface">2026-08-26</span>
+<span class="text-outline-variant">→</span>
+<span class="font-medium text-on-surface">2026-09-09</span>
+</div>
+<!-- Cleaned Reviews -->
+<div class="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-tertiary">analytics</span>
+<span>Cleaned sample:</span>
+<span class="font-semibold text-on-surface">9,428 reviews</span>
+</div>
+<!-- Word Count Badge -->
+<div class="inline-flex items-center gap-space-xs px-space-sm py-0.5 rounded-full bg-surface-container text-tertiary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">short_text</span>
+<span>≤250 words synth</span>
+</div>
+<!-- Status Pill -->
+<div class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded-full bg-primary-fixed text-primary font-label-sm text-label-sm font-semibold">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span>Synthesized &amp; Ready</span>
+</div>
+</div>
+<!-- Quick Archive Action -->
+<a class="inline-flex items-center gap-space-xs text-primary font-label-md text-label-md font-semibold hover:text-primary-container transition-colors group" href="#archive">
+<span>View rolling archive (Google Doc)</span>
+<span class="material-symbols-outlined text-[16px] transition-transform group-hover:translate-x-0.5">arrow_outward</span>
+</a>
+</div>
+<!-- Title & Executive Context Block -->
+<div class="w-full flex flex-col md:flex-row md:items-end justify-between gap-space-md pt-space-xs">
+<div class="max-w-2xl">
+<div class="inline-flex items-center gap-space-xs text-primary font-label-sm text-label-sm uppercase tracking-wider mb-space-xs font-semibold">
+<span class="material-symbols-outlined text-[15px]">electric_bolt</span>
+<span>Executive Intelligence Dossier · Issue #41</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg md:font-display-lg md:text-display-lg text-on-surface">
+        This week’s pulse
+      </h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">
+        Weekly synthesized intelligence from 9,428 verified Android Google Play reviews for <span class="font-mono text-tertiary bg-surface-container px-1 rounded">com.openai.chatgpt</span>.
+      </p>
+</div>
+<!-- Mini Sentiment Velocity Gauge -->
+<div class="flex items-center gap-space-md p-space-sm rounded-xl bg-surface-container-low shadow-sm">
+<div class="w-12 h-12 flex items-center justify-center rounded-lg bg-surface-container-lowest shadow-sm text-secondary">
+<span class="material-symbols-outlined text-[24px]">trending_down</span>
+</div>
+<div class="flex flex-col pr-space-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Net Sentiment Delta</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-md text-headline-md text-secondary font-bold">-4.8%</span>
+<span class="font-body-sm text-body-sm text-tertiary">vs previous cycle</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Editorial Section 1: TOP THEMES -->
+<section class="flex flex-col w-full gap-space-md mt-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">Top Themes</h2>
+<span class="px-space-sm py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-tertiary">Triaged by volume</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Representing 21.6% of all tagged feedback</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Theme 1 (Coral Badge #1, Prominent Left Bar) -->
+<article class="relative flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-xl"></div>
+<div class="flex flex-col">
+<div class="flex items-center justify-between mb-space-sm pl-space-xs">
+<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold shadow-sm">
+              #1
+            </span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold bg-secondary-fixed/50 px-2 py-0.5 rounded-full">
+              n=1,170 reviews
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold pl-space-xs mt-space-xs">
+            Image &amp; photo generation limits
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant pl-space-xs mt-space-sm">
+            Users report sudden daily caps and steep throttling when generating multiple images during single sessions, sparking frustration around paid tier parity.
+          </p>
+</div>
+<div class="flex items-center justify-between pl-space-xs pt-space-lg mt-space-md border-t border-surface-container">
+<div class="flex items-center gap-space-xs text-secondary font-label-sm text-label-sm font-medium">
+<span class="material-symbols-outlined text-[16px]">priority_high</span>
+<span>Severe friction index</span>
+</div>
+<span class="font-mono text-tertiary font-label-sm text-label-sm">Vol: 12.4%</span>
+</div>
+</article>
+<!-- Theme 2 (Neutral Slate #2) -->
+<article class="relative flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-tertiary-container rounded-l-xl"></div>
+<div class="flex flex-col">
+<div class="flex items-center justify-between mb-space-sm pl-space-xs">
+<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-surface-container-highest text-tertiary font-label-sm text-label-sm font-bold">
+              #2
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full font-medium">
+              n=555 reviews
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold pl-space-xs mt-space-xs">
+            Paywall / limits / upgrade friction
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant pl-space-xs mt-space-sm">
+            Recurring feedback on confusing transition between free tier rate-limits and Plus subscription value props, especially after app updates.
+          </p>
+</div>
+<div class="flex items-center justify-between pl-space-xs pt-space-lg mt-space-md border-t border-surface-container">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm font-medium">
+<span class="material-symbols-outlined text-[16px] text-tertiary">hourglass_bottom</span>
+<span>Conversion bottleneck</span>
+</div>
+<span class="font-mono text-tertiary font-label-sm text-label-sm">Vol: 5.9%</span>
+</div>
+</article>
+<!-- Theme 3 (Neutral Slate #3) -->
+<article class="relative flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-outline rounded-l-xl"></div>
+<div class="flex flex-col">
+<div class="flex items-center justify-between mb-space-sm pl-space-xs">
+<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-surface-container-highest text-tertiary font-label-sm text-label-sm font-bold">
+              #3
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full font-medium">
+              n=311 reviews
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold pl-space-xs mt-space-xs">
+            Answer quality / misunderstandings
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant pl-space-xs mt-space-sm">
+            Critiques regarding overconfident hallucinations on technical questions and degraded context retention in extended conversation threads.
+          </p>
+</div>
+<div class="flex items-center justify-between pl-space-xs pt-space-lg mt-space-md border-t border-surface-container">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm font-medium">
+<span class="material-symbols-outlined text-[16px] text-tertiary">psychology_alt</span>
+<span>Accuracy regression</span>
+</div>
+<span class="font-mono text-tertiary font-label-sm text-label-sm">Vol: 3.3%</span>
+</div>
+</article>
+</div>
+</section>
+<!-- Editorial Section 2: VERBATIM VOICE OF CUSTOMER -->
+<section class="flex flex-col w-full gap-space-md mt-space-sm">
+<div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">Verbatim Voice of Customer</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">· Anonymous Play Store excerpts</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Zero PII retained · Device IDs scrubbed</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Quote 1 -->
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-lg shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 transform translate-x-3 -translate-y-3 font-display-lg text-6xl text-surface-container select-none pointer-events-none">
+          “
+        </div>
+<div>
+<!-- Star Rating & Metadata Header -->
+<div class="flex items-center justify-between mb-space-md">
+<div class="inline-flex items-center gap-0.5 px-space-sm py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>1.0</span>
+</div>
+<span class="font-mono font-label-sm text-label-sm text-tertiary">v1.2026.241 · Sep 04</span>
+</div>
+<!-- Indented Quote Pullout -->
+<div class="border-l-2 border-secondary pl-space-md my-space-sm">
+<p class="font-body-md text-body-md text-on-surface italic leading-relaxed">
+              “I used to make 10-15 concept illustrations a day for study. Now after 2 images it locks me out for 4 hours with no explanation. Please clarify quotas!”
+            </p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs pt-space-md text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px] text-secondary">label</span>
+<span>Theme: Quota Transparency</span>
+</div>
+</div>
+<!-- Quote 2 -->
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-lg shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 transform translate-x-3 -translate-y-3 font-display-lg text-6xl text-surface-container select-none pointer-events-none">
+          “
+        </div>
+<div>
+<!-- Star Rating & Metadata Header -->
+<div class="flex items-center justify-between mb-space-md">
+<div class="inline-flex items-center gap-0.5 px-space-sm py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>2.0</span>
+</div>
+<span class="font-mono font-label-sm text-label-sm text-tertiary">v1.2026.240 · Sep 02</span>
+</div>
+<!-- Indented Quote Pullout -->
+<div class="border-l-2 border-secondary pl-space-md my-space-sm">
+<p class="font-body-md text-body-md text-on-surface italic leading-relaxed">
+              “The upgrade prompts appear in the middle of urgent tasks with zero breakdown of why my daily quota ran out while on cellular data.”
+            </p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs pt-space-md text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px] text-tertiary">label</span>
+<span>Theme: Upgrade Modal Disruption</span>
+</div>
+</div>
+<!-- Quote 3 -->
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-lg shadow-sm relative overflow-hidden group">
+<div class="absolute top-0 right-0 transform translate-x-3 -translate-y-3 font-display-lg text-6xl text-surface-container select-none pointer-events-none">
+          “
+        </div>
+<div>
+<!-- Star Rating & Metadata Header -->
+<div class="flex items-center justify-between mb-space-md">
+<div class="inline-flex items-center gap-0.5 px-space-sm py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>2.0</span>
+</div>
+<span class="font-mono font-label-sm text-label-sm text-tertiary">v1.2026.239 · Aug 29</span>
+</div>
+<!-- Indented Quote Pullout -->
+<div class="border-l-2 border-secondary pl-space-md my-space-sm">
+<p class="font-body-md text-body-md text-on-surface italic leading-relaxed">
+              “Gives direct incorrect code syntax with total confidence and forgets the prompt two turns later. The previous version felt much sharper.”
+            </p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs pt-space-md text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px] text-tertiary">label</span>
+<span>Theme: Hallucination &amp; Retention</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Editorial Section 3: RECOMMENDED ACTIONS -->
+<section class="flex flex-col w-full gap-space-md mt-space-sm pb-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">
+          Recommended Actions for Product &amp; Support
+        </h2>
+</div>
+<div class="hidden sm:flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[15px] text-primary">verified</span>
+<span>AI synthesized triage playbook</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Action 1 -->
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="px-space-sm py-0.5 rounded bg-primary/10 text-primary font-label-sm text-label-sm font-semibold">
+              Sprint 38 Candidate
+            </span>
+<span class="material-symbols-outlined text-primary text-[20px]">speed</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mt-space-xs">
+            Quota Clarity in UI
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-sm">
+            Expose visible session and daily generation meters directly inside the image generation canvas to eliminate surprise cut-offs.
+          </p>
+</div>
+<div class="flex items-center justify-between pt-space-lg mt-space-md border-t border-surface-container text-on-surface-variant font-label-sm text-label-sm">
+<span>Owner: Android Experience</span>
+<button class="text-primary font-semibold hover:underline inline-flex items-center gap-0.5" type="button">
+<span>Log Jira</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Action 2 -->
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="px-space-sm py-0.5 rounded bg-primary/10 text-primary font-label-sm text-label-sm font-semibold">
+              Growth / Monetization
+            </span>
+<span class="material-symbols-outlined text-primary text-[20px]">tune</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mt-space-xs">
+            Free-Tier Limit Messaging Overhaul
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-sm">
+            Revise the modal copy explaining tier limits with transparent countdown timers rather than generic upgrade roadblocks.
+          </p>
+</div>
+<div class="flex items-center justify-between pt-space-lg mt-space-md border-t border-surface-container text-on-surface-variant font-label-sm text-label-sm">
+<span>Owner: Growth Design</span>
+<button class="text-primary font-semibold hover:underline inline-flex items-center gap-0.5" type="button">
+<span>Log Jira</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Action 3 -->
+<div class="flex flex-col justify-between bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-shadow">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="px-space-sm py-0.5 rounded bg-primary/10 text-primary font-label-sm text-label-sm font-semibold">
+              Model Alignment
+            </span>
+<span class="material-symbols-outlined text-primary text-[20px]">shield</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold mt-space-xs">
+            Reduce Confident-Wrong Answers
+          </h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-sm">
+            Introduce confidence threshold safeguards and calibrated answer disclaimers on technical/code prompts.
+          </p>
+</div>
+<div class="flex items-center justify-between pt-space-lg mt-space-md border-t border-surface-container text-on-surface-variant font-label-sm text-label-sm">
+<span>Owner: Inference &amp; Eval</span>
+<button class="text-primary font-semibold hover:underline inline-flex items-center gap-0.5" type="button">
+<span>Log Jira</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Editorial Masthead Archive Anchor Bar -->
+<div class="w-full bg-surface-container-low rounded-xl px-space-lg py-space-md shadow-sm flex flex-col sm:flex-row items-center justify-between gap-space-sm" id="archive">
+<div class="flex items-center gap-space-md">
+<div class="w-9 h-9 rounded-lg bg-surface-container-lowest shadow-sm flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">description</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface font-bold">Published to Google Doc</span>
+<span class="text-tertiary">·</span>
+<a class="text-primary hover:text-primary-container font-label-md text-label-md font-semibold inline-flex items-center gap-0.5 transition-colors" href="#">
+            Open Doc → (rolling archive)
+          </a>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Automated daily snapshot syncs with continuous executive ledger</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface-variant font-mono font-label-sm text-label-sm bg-surface-container-lowest px-space-md py-1.5 rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-[15px] text-tertiary">update</span>
+<span>Last generated: 2026-09-09 09:14 UTC</span>
+</div>
+</div>
+</div></div></main><footer class="w-full bg-surface-container-lowest border-t border-surface-container-highest py-space-md"><div class="max-w-6xl mx-auto px-gutter flex flex-col sm:flex-row items-center justify-between gap-space-xs text-on-surface-variant font-body-sm text-body-sm"><div class="flex items-center gap-space-sm"><span class="font-medium text-on-surface">Published to Google Doc</span><span class="text-outline-variant">·</span><a class="text-primary hover:text-primary-container inline-flex items-center font-semibold transition-colors" href="#">Open Doc →</a></div><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[14px] text-tertiary">schedule</span><span>Last generated: Today at 09:14 AM UTC</span></div></div></footer></body></html>

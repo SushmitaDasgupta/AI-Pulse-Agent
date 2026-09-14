@@ -37,6 +37,10 @@ data/processed/*
 out/*
 !out/.gitkeep
 
+# Frontend (Vite)
+web/node_modules/
+web/dist/
+
 # OS / IDE
 .DS_Store
 .idea/
