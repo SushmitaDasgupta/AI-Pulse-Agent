@@ -19,11 +19,29 @@ pulsator run --require-mcp
 
 | Item | Value |
 | --- | --- |
-| Host | GitHub Actions workflow `.github/workflows/weekly-pulse.yml` |
-| Cadence | Mondays **09:00 UTC** (`0 9 * * 1`) |
+| Host (cloud) | GitHub Actions `.github/workflows/weekly-pulse.yml` |
+| Cadence | Mondays **09:00 UTC** — automatic (no manual click) |
 | Command | `pulsator run --require-mcp` |
-| Manual | Actions → **Weekly Pulse** → Run workflow |
-| Alt host | Railway cron / `POST /run` on the CLI image (same env secrets) |
+| Host (Mac) | `./scripts/install_macos_weekly_launchd.sh` → Mon **14:30** local |
+| Manual rescue | Actions → **Weekly Pulse** → Run workflow |
+| Alt host | Railway cron / `POST /run` (same secrets) |
+
+### One-time: enable unattended runs
+
+**Cloud** (runs even if your laptop is off):
+
+```bash
+gh auth refresh -h github.com   # if gh auth expired
+./scripts/setup_github_secrets.sh
+```
+
+**Mac** (uses this machine’s `.env`):
+
+```bash
+./scripts/install_macos_weekly_launchd.sh
+```
+
+After either path is set up, you do **not** need to run `pulsator` weekly by hand.
 
 ### Required GitHub Actions secrets
 

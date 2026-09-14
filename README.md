@@ -80,16 +80,15 @@ pulsator run --stage draft_email
 
 ## Phase 4 — Weekly scheduler
 
-Unattended Monday run via GitHub Actions (external cron → CLI; no in-process daemon):
+Unattended Monday run — **no manual kickoff** once secrets/LaunchAgent are set:
 
 | Item | Value |
 | --- | --- |
-| Workflow | [`.github/workflows/weekly-pulse.yml`](.github/workflows/weekly-pulse.yml) |
-| Cadence | Mondays **09:00 UTC** |
+| Cloud cron | [`.github/workflows/weekly-pulse.yml`](.github/workflows/weekly-pulse.yml) — Mondays **09:00 UTC** |
+| Mac cron | `./scripts/install_macos_weekly_launchd.sh` — Mondays **14:30** local |
 | Command | `pulsator run --require-mcp` |
-| Manual | Actions → **Weekly Pulse** → Run workflow (`live` or `file` acquire) |
-| Artifacts | `out/` + cleaned corpus uploaded for **28 days** |
-| Alt | Railway cron / `POST /run` with the same secrets |
+| One-time cloud setup | `gh auth refresh -h github.com && ./scripts/setup_github_secrets.sh` |
+| Artifacts | Actions uploads `out/` for **28 days** |
 
 **GitHub secrets:** `GROQ_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_DOCS_DOCUMENT_ID`, `EMAIL_TO` (optional: `MCP_SERVER_URL`, `MCP_API_KEY`, `ACQUIRE_MAX_REVIEWS`).
 

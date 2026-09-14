@@ -1,15 +1,18 @@
-# P4 — Weekly Scheduler
-# Runs the full Pulsator graph: acquire → scrub → classify → pulse → Doc append → Gmail draft.
+# P4 — Weekly Scheduler (fully automated)
+# Runs every Monday without a manual kickoff once Actions secrets are set.
 # Secrets: GROQ_API_KEY, GEMINI_API_KEY, GOOGLE_DOCS_DOCUMENT_ID, EMAIL_TO
-# Optional: MCP_SERVER_URL, MCP_API_KEY
+# Optional: MCP_SERVER_URL, MCP_API_KEY, ACQUIRE_MAX_REVIEWS
 # Railway MCP server must have GOOGLE_REFRESH_TOKEN (not needed in Actions).
+#
+# One-time: ./scripts/setup_github_secrets.sh
 
 name: Weekly Pulse
 
 on:
   schedule:
-    # Mondays 09:00 UTC — adjust as needed
+    # Automatic — Mondays 09:00 UTC (do not rely on workflow_dispatch)
     - cron: "0 9 * * 1"
+  # Optional mid-week rescue only
   workflow_dispatch:
     inputs:
       acquire_mode:
@@ -26,6 +29,9 @@ on:
         default: true
         type: boolean
 
+permissions:
+  contents: read
+
 concurrency:
   group: weekly-pulse
   cancel-in-progress: false
@@ -37,16 +43,15 @@ jobs:
     # Live Play scrape + dual LLM can take a while
     timeout-minutes: 360
     env:
-      # Prefer workflow_dispatch inputs; schedule defaults to live + hard MCP fail
-      ACQUIRE_MODE: ${{ github.event.inputs.acquire_mode || 'live' }}
-      REQUIRE_MCP: ${{ github.event.inputs.require_mcp == 'false' && 'false' || 'true' }}
+      # Schedule events have no inputs → live + require MCP
+      ACQUIRE_MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.acquire_mode || 'live' }}
+      REQUIRE_MCP: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.require_mcp == 'false' && 'false' || 'true' }}
       MCP_SERVER_URL: ${{ secrets.MCP_SERVER_URL || 'https://mcp-server-google-production.up.railway.app/mcp' }}
       MCP_API_KEY: ${{ secrets.MCP_API_KEY }}
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       GOOGLE_DOCS_DOCUMENT_ID: ${{ secrets.GOOGLE_DOCS_DOCUMENT_ID }}
       EMAIL_TO: ${{ secrets.EMAIL_TO }}
-      # Optional throttle for CI / rescue runs (unset = config.yaml max_reviews)
       ACQUIRE_MAX_REVIEWS: ${{ secrets.ACQUIRE_MAX_REVIEWS }}
 
     steps:
@@ -70,14 +75,14 @@ jobs:
           missing=0
           for key in GROQ_API_KEY GEMINI_API_KEY GOOGLE_DOCS_DOCUMENT_ID EMAIL_TO; do
             if [ -z "${!key}" ]; then
-              echo "::error::Missing secret: $key"
+              echo "::error::Missing secret: $key — run ./scripts/setup_github_secrets.sh once"
               missing=1
             fi
           done
           if [ "$missing" -ne 0 ]; then
             exit 1
           fi
-          echo "ACQUIRE_MODE=$ACQUIRE_MODE REQUIRE_MCP=$REQUIRE_MCP"
+          echo "event=$GITHUB_EVENT_NAME ACQUIRE_MODE=$ACQUIRE_MODE REQUIRE_MCP=$REQUIRE_MCP"
           echo "EMAIL_TO set; GOOGLE_DOCS_DOCUMENT_ID length=${#GOOGLE_DOCS_DOCUMENT_ID}"
 
       - name: Run weekly pulse
