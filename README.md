@@ -1,12 +1,86 @@
 # AI Review Pulsator
 
-Weekly one-page pulse from **public** Google Play reviews for ChatGPT (`com.openai.chatgpt`).
+Turns **public Google Play reviews** for ChatGPT Android (`com.openai.chatgpt`) into a **weekly ≤250-word pulse** — top themes, verbatim user quotes, and action ideas — then appends it to a Google Doc and creates an unsent Gmail draft.
 
-> **Status: P1–P3 ready. P4 weekly scheduler = GitHub Actions cron → full `pulsator run`.**
+> **Status:** P1–P3 ready. P4 weekly scheduler = GitHub Actions cron → full `pulsator run`.
+
+---
+
+## What this project does
+
+Every week the system:
+
+1. **Fetches** recent public Play Store reviews (no Console login).
+2. **Classifies** them into a fixed theme catalog (login, reliability, image, paywall, quality, praise).
+3. **Generates themes** — up to 5 themes with counts, shares, and short descriptions.
+4. **Builds the pulse report** — Top 3 pain themes, 3 verbatim quotes, 3 action ideas, composed into ≤250 words.
+5. **Delivers** — appends the pulse to a Google Doc and drafts a Gmail email (never auto-sends).
+
+Stakeholders get a one-page note they can scan in minutes: *what users care about, what they said, and what to do next*.
+
+---
+
+## How it works (pipeline)
+
+```text
+Public Play listing
+       │
+       ▼
+  acquire → normalize → scrub          (deterministic ingest; no LLM)
+       │
+       ▼
+  theme                                (classify + aggregate ≤5 themes)
+       │
+       ▼
+  select                               (Top 3 themes + quotes + actions)
+       │
+       ▼
+  compose → validate                   (≤250-word pulse; hard gates)
+       │
+       ▼
+  publish_docs → draft_email           (MCP → Google Doc + Gmail draft)
+```
+
+| Stage | What happens | Artifact |
+| --- | --- | --- |
+| **Acquire** | Live fetch via `google-play-scraper`, or offline file/fixture | `data/raw/play_reviews_*.json` |
+| **Normalize** | Canonical review schema | `data/interim/reviews.normalized.json` |
+| **Scrub** | PII redact; drop empty/short/non-English | `data/processed/reviews.cleaned.json` |
+| **Theme** | Keyword baseline + Groq batch labels → ≤5 themes; Gemini enriches descriptions | `out/themes.json` |
+| **Select** | Rank Top 3 pain themes; pick/generate quotes & action ideas | `out/selection.json` |
+| **Compose** | Stakeholder markdown (themes / quotes / actions), optionally LLM-rewritten & shortened | `out/pulse.md`, `out/pulse.json` |
+| **Validate** | ≤5 themes, exactly 3 quotes & 3 actions, quotes ⊆ cleaned text, ≤250 words | fail run if gates break |
+| **Publish** | MCP `google_docs_append_content` — ISO-week section on an existing Doc | Doc URL |
+| **Draft email** | MCP `gmail_draft_email` — body with themes, actions, Doc link (**draft only**) | Gmail draft |
+
+**LangGraph** wires the stages: `acquire → normalize → scrub → theme → select → compose → validate → publish → draft_email` (`src/agent/graph.py`).
+
+---
+
+## LangChain and the two LLMs
+
+The agent core is built with **LangChain** (chat models + message prompts) and orchestrated with **LangGraph** (one node per stage). Versioned prompts live under `prompts/`. Deterministic ingest/scrub and MCP delivery stay outside the LLM when possible; missing API keys fall back to keyword/catalog paths so the pipeline still runs offline.
+
+| Role | Provider | Default model | Env key | Used for |
+| --- | --- | --- | --- | --- |
+| **Classify** | Groq (`ChatGroq`) | `openai/gpt-oss-120b` | `GROQ_API_KEY` | Batch-label a stratified sample of reviews into catalog `theme_id`s (`theme` stage) |
+| **Generate** | Gemini (`ChatGoogleGenerativeAI`) | `gemini-2.5-flash` | `GEMINI_API_KEY` | Theme descriptions, quote/action proposals, pulse prose + shorten (`theme` / `select` / `compose`) |
+
+**Why two models:** Groq’s free-tier throughput fits **batch classification** (~900 reviews in batches of ~20). Gemini fits **stakeholder-facing generation** (descriptions, quotes, actions, pulse copy). Config lives under `langchain.classify` / `langchain.generate` in `config.yaml`; factories in `src/agent/llm.py`.
+
+| Chain module | LLM touchpoints |
+| --- | --- |
+| `src/agent/chains/theme.py` | Groq classify + Gemini theme descriptions |
+| `src/agent/chains/select.py` | Gemini quotes & action ideas (quotes must be substrings of cleaned reviews) |
+| `src/agent/chains/compose.py` | Gemini rewrite + shorten of the pulse body |
+
+Email draft text itself is **deterministic** (no LLM) — themes, actions, Doc URL, and a “Draft only” footer.
+
+---
 
 ## Review data source
 
-Reviews are fetched from the **public** ChatGPT Play Store listing (no Play Console / login):
+Reviews come from the **public** ChatGPT Play Store listing (no Play Console / login):
 
 https://play.google.com/store/apps/details?id=com.openai.chatgpt&hl=en_IN
 
@@ -20,34 +94,22 @@ https://play.google.com/store/apps/details?id=com.openai.chatgpt&hl=en_IN
 
 **Not used:** Google Play Console, Play Developer API, Google-account store login.
 
+---
+
 ## Install
 
 Requires **Python 3.11+** (verified with 3.12).
 
 ```bash
-# Example with Homebrew Python 3.12:
-#   /opt/homebrew/opt/python@3.12/bin/python3.12 -m venv .venv
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .   # enables the `pulsator` console script
 ```
 
-Optional: copy `.env.example` → `.env` and set **both** `GROQ_API_KEY` (classification) and `GEMINI_API_KEY` (generation). **P2 also runs offline** with the deterministic catalog path when keys are missing.
+Optional: copy `.env.example` → `.env` and set **both** `GROQ_API_KEY` (classification) and `GEMINI_API_KEY` (generation). Pulse stages also run offline with the deterministic catalog path when keys are missing.
 
-## Acquire notes
-
-```bash
-# Offline / CI (override with ACQUIRE_MODE=file)
-# acquire.mode: file
-
-# Live public fetch
-# Set acquire.mode: live in config.yaml (or ACQUIRE_MODE=live), then:
-pulsator run --stage ingest
-# On live failure, acquire retries then falls back to the latest data/raw export.
-```
-
-Raw exports include provenance: `app_id`, `lang`/`country`, `play_url`, `fetched_at`, `client`.
+---
 
 ## CLI
 
@@ -78,9 +140,22 @@ pulsator run --stage publish_docs
 pulsator run --stage draft_email
 ```
 
+### Acquire notes
+
+```bash
+# Offline / CI: acquire.mode: file (or ACQUIRE_MODE=file)
+# Live: acquire.mode: live in config.yaml (or ACQUIRE_MODE=live)
+pulsator run --stage ingest
+# On live failure, acquire retries then falls back to the latest data/raw export.
+```
+
+Raw exports include provenance: `app_id`, `lang`/`country`, `play_url`, `fetched_at`, `client`.
+
+---
+
 ## Phase 4 — Weekly scheduler
 
-Unattended Monday run — **no manual kickoff** once secrets/LaunchAgent are set:
+Unattended Monday run — no manual kickoff once secrets/LaunchAgent are set:
 
 | Item | Value |
 | --- | --- |
@@ -94,6 +169,8 @@ Unattended Monday run — **no manual kickoff** once secrets/LaunchAgent are set
 
 Re-running the same ISO week **appends another Doc section**. Email remains **draft-only** (send manually). Details: [`docs/runbook.md`](docs/runbook.md).
 
+---
+
 ## Phase 3 MCP (Railway)
 
 | Item | Value |
@@ -105,22 +182,7 @@ Re-running the same ISO week **appends another Doc section**. Email remains **dr
 
 The MCP server **appends** to an existing Google Doc (it cannot create one). Create a Doc once, paste its id into `.env`, then run publish/draft stages.
 
-## Pipeline stage IDs
-
-| Stage | ID | Phase |
-| --- | --- | --- |
-| Acquire public reviews | `acquire` | P1 |
-| Normalize fields | `normalize` | P1 |
-| Scrub PII | `scrub` | P1 |
-| Theme (≤5) | `theme` | P2 |
-| Select Top 3 / quotes / actions | `select` | P2 |
-| Compose ≤250-word pulse | `compose` | P2 |
-| Validate quote/theme/word gates | `validate` | P2 |
-| Publish Google Doc via MCP | `publish_docs` | P3 |
-| Create Gmail draft via MCP | `draft_email` | P3 |
-| Weekly cron → full graph | GitHub Actions | P4 |
-
-**LangGraph:** `acquire → normalize → scrub → theme → select → compose → validate → publish → draft_email`
+---
 
 ## Artifact paths
 
@@ -134,6 +196,8 @@ The MCP server **appends** to an existing Google Doc (it cannot create one). Cre
 | Pulse | `out/pulse.md`, `out/pulse.json` |
 | Run log | `out/run.log` |
 
+---
+
 ## Tests
 
 ```bash
@@ -142,9 +206,13 @@ pytest -q
 PULSATOR_LIVE=1 pytest -q -m network
 ```
 
+---
+
 ## Config
 
-See `config.yaml` for `play_url`, `app_id`, `acquire`, lookback, caps, and LangChain settings. Scheduler overrides: `ACQUIRE_MODE`, `ACQUIRE_MAX_REVIEWS`, `REQUIRE_MCP`.
+See `config.yaml` for `play_url`, `app_id`, `acquire`, lookback, caps, and LangChain settings (`classify` / `generate`). Scheduler overrides: `ACQUIRE_MODE`, `ACQUIRE_MAX_REVIEWS`, `REQUIRE_MCP`.
+
+---
 
 ## Docs
 
