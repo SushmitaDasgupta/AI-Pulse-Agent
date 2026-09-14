@@ -191,6 +191,43 @@ def test_publish_and_draft_via_mocked_client(tmp_path: Path, monkeypatch: pytest
     assert "gmail_send_email" not in {c[0] for c in calls}
 
 
+def test_draft_email_accepts_ui_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
+    cfg = load_config()
+    monkeypatch.setenv("EMAIL_TO", "ops@example.com")
+
+    calls: list[tuple[str, dict[str, Any]]] = []
+
+    class FakeClient(McpHttpClient):
+        def __init__(self) -> None:  # noqa: D107
+            pass
+
+        def call_tool(self, name: str, arguments: dict[str, Any]):  # type: ignore[override]
+            from src.agent.tools.mcp_client import McpToolResult
+
+            calls.append((name, arguments))
+            return McpToolResult(
+                success=True,
+                payload={"success": True, "draftId": "r-ui-1", "message": "drafted"},
+                raw_text="{}",
+            )
+
+    drafted = draft_email_via_mcp(
+        cfg,
+        _pulse(),
+        doc_url="https://docs.google.com/document/d/x/edit",
+        client=FakeClient(),
+        to="pm@example.com, lead@example.com",
+        subject="Custom subject",
+        body="Custom body from UI",
+    )
+    assert drafted["draft_id"] == "r-ui-1"
+    assert drafted["to"] == "pm@example.com, lead@example.com"
+    assert calls[0][0] == "gmail_draft_email"
+    assert calls[0][1]["to"] == ["pm@example.com", "lead@example.com"]
+    assert calls[0][1]["subject"] == "Custom subject"
+    assert calls[0][1]["body"] == "Custom body from UI"
+
+
 def test_publish_requires_document_id(monkeypatch: pytest.MonkeyPatch) -> None:
     cfg = load_config()
     # Empty string wins over .env because load_dotenv does not override existing keys.

@@ -204,9 +204,16 @@ def draft_email_via_mcp(
     *,
     doc_url: str | None = None,
     client: McpHttpClient | None = None,
+    to: str | None = None,
+    subject: str | None = None,
+    body: str | None = None,
 ) -> dict[str, Any]:
-    """Create an unsent Gmail draft via MCP (never sends)."""
-    to_addr = resolve_email_to(cfg)
+    """Create an unsent Gmail draft via MCP (never sends).
+
+    Optional ``to`` / ``subject`` / ``body`` override the config defaults
+    (used by the web UI compose modal).
+    """
+    to_addr = (to or "").strip() or resolve_email_to(cfg)
     if not to_addr or to_addr == "you@example.com":
         raise McpError(
             "Set EMAIL_TO in .env (or email_to in config.yaml) to a real address "
@@ -215,8 +222,14 @@ def draft_email_via_mcp(
 
     week = iso_week_label()
     subject_tmpl = cfg.mcp.email_subject_template or cfg.docs_title_template
-    subject = subject_tmpl.format(iso_week=week)
-    body = build_email_body(pulse, doc_url, iso_week=week)
+    final_subject = (subject or "").strip() or subject_tmpl.format(iso_week=week)
+    final_body = (body or "").strip() or build_email_body(
+        pulse, doc_url, iso_week=week
+    )
+    recipients = [part.strip() for part in to_addr.split(",") if part.strip()]
+    if not recipients:
+        raise McpError("No valid recipient addresses in To field.")
+
     mcp = client or McpHttpClient(
         url=cfg.mcp.url or None,
         api_key=cfg.mcp.api_key or None,
@@ -224,9 +237,9 @@ def draft_email_via_mcp(
     result = mcp.call_tool(
         "gmail_draft_email",
         {
-            "to": [to_addr],
-            "subject": subject,
-            "body": body,
+            "to": recipients,
+            "subject": final_subject,
+            "body": final_body,
         },
     )
     draft_id = str(result.payload.get("draftId") or "")
@@ -234,8 +247,8 @@ def draft_email_via_mcp(
         raise McpError(f"gmail_draft_email succeeded without draftId: {result.payload}")
     return {
         "draft_id": draft_id,
-        "to": to_addr,
-        "subject": subject,
+        "to": ", ".join(recipients),
+        "subject": final_subject,
         "message": result.payload.get("message"),
         "tool": "gmail_draft_email",
     }

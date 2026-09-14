@@ -170,7 +170,7 @@ export function buildDefaultEmail(data: PulseData) {
     .join('\n')
 
   return {
-    to: 'you@company.com',
+    to: 'sushmitadasgupta7@gmail.com',
     subject: `ChatGPT Play Pulse — ${data.isoWeek}`,
     body: `${data.product} Play Pulse — ${data.isoWeek}
 

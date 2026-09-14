@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { startWeeklyRun } from './api'
 import { ActionsSection } from './components/ActionsSection'
 import { ArchiveBar, Footer } from './components/ArchiveBar'
 import { Header } from './components/Header'
@@ -24,8 +25,8 @@ export default function App() {
         setRunning(false)
         setStageIndex(0)
         setToast({
-          message: 'Weekly pulse ready',
-          detail: 'Simulated pipeline finished — seed data unchanged (UI-only).',
+          message: 'Weekly pulse started on Railway',
+          detail: 'Doc append + Gmail draft run on the backend — check Gmail Drafts and the rolling Doc.',
         })
       }, 500)
       return () => window.clearTimeout(timer)
@@ -38,21 +39,33 @@ export default function App() {
 
   useEffect(() => {
     if (!toast) return
-    const timer = window.setTimeout(() => setToast(null), 4200)
+    const timer = window.setTimeout(() => setToast(null), 5200)
     return () => window.clearTimeout(timer)
   }, [toast])
 
-  const startRun = useCallback(() => {
+  const startRun = useCallback(async () => {
     if (running) return
     setEmailOpen(false)
     setStageIndex(0)
     setRunning(true)
+    try {
+      await startWeeklyRun()
+    } catch (err) {
+      setRunning(false)
+      setStageIndex(0)
+      setToast({
+        message: 'Could not start weekly pulse',
+        detail: err instanceof Error ? err.message : String(err),
+      })
+    }
   }, [running])
 
   return (
     <div className="min-h-svh bg-surface text-on-surface antialiased">
       <Header
-        onRun={startRun}
+        onRun={() => {
+          void startRun()
+        }}
         onSendEmail={() => setEmailOpen(true)}
         running={running}
       />
@@ -106,10 +119,18 @@ export default function App() {
         open={emailOpen}
         data={pulse}
         onClose={() => setEmailOpen(false)}
-        onSent={(to) =>
+        onDelivered={(result) =>
           setToast({
-            message: `Pulse emailed to ${to}`,
-            detail: 'UI simulation — message not sent via Gmail MCP.',
+            message: `Gmail draft created for ${result.to}`,
+            detail: result.doc_url
+              ? `Doc updated · draft ${result.draft_id ?? ''} — open Gmail Drafts to review and send.`
+              : `Draft ${result.draft_id ?? ''} — open Gmail Drafts to review and send.`,
+          })
+        }
+        onError={(message) =>
+          setToast({
+            message: 'Delivery failed',
+            detail: message,
           })
         }
       />

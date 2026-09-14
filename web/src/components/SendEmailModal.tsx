@@ -1,4 +1,5 @@
 import { useEffect, useId, useState, type FormEvent } from 'react'
+import { deliverPulse, type DeliverResult } from '../api'
 import { buildDefaultEmail, type PulseData } from '../data/pulse'
 import { Icon } from './Icon'
 
@@ -6,10 +7,17 @@ type SendEmailModalProps = {
   open: boolean
   data: PulseData
   onClose: () => void
-  onSent: (to: string) => void
+  onDelivered: (result: DeliverResult) => void
+  onError: (message: string) => void
 }
 
-export function SendEmailModal({ open, data, onClose, onSent }: SendEmailModalProps) {
+export function SendEmailModal({
+  open,
+  data,
+  onClose,
+  onDelivered,
+  onError,
+}: SendEmailModalProps) {
   const titleId = useId()
   const defaults = buildDefaultEmail(data)
   const [to, setTo] = useState(defaults.to)
@@ -47,11 +55,21 @@ export function SendEmailModal({ open, data, onClose, onSent }: SendEmailModalPr
     }
     setSending(true)
     setError(null)
-    // UI-only: simulate send latency
-    await new Promise((resolve) => setTimeout(resolve, 650))
-    setSending(false)
-    onSent(to.trim())
-    onClose()
+    try {
+      const result = await deliverPulse({
+        to: to.trim(),
+        subject: subject.trim(),
+        body: body.trim(),
+      })
+      onDelivered(result)
+      onClose()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      setError(message)
+      onError(message)
+    } finally {
+      setSending(false)
+    }
   }
 
   return (

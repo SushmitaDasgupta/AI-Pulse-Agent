@@ -60,7 +60,7 @@ export function PipelineOverlay({
             </div>
             <div className="flex items-center justify-between pt-space-xs text-xs text-on-surface-variant">
               <span>In-flight phase: {activeLabel}</span>
-              <span className="italic text-tertiary">UI simulation · no backend call</span>
+              <span className="italic text-tertiary">Live Railway pipeline</span>
             </div>
           </div>
 

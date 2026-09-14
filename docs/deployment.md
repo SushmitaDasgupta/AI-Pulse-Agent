@@ -59,7 +59,18 @@ Do **not** put `GOOGLE_REFRESH_TOKEN` on this service — that belongs on the **
 | Method | Path | Behavior |
 | --- | --- | --- |
 | `GET` | `/` or `/health` | `{"status":"ok","service":"ai-pulse-agent"}` |
-| `POST` | `/run` | Starts full graph in a background thread; `202 {"status":"started"}` (sets `REQUIRE_MCP=true` if unset) |
+| `POST` | `/run` | Starts full graph in a background thread; `202 {"status":"started"}` |
+| `POST` | `/deliver` | Sync: append Google Doc + create Gmail **draft** via MCP; accepts JSON `{to,subject,body}` |
+
+**Live URLs**
+
+| Surface | URL |
+| --- | --- |
+| Frontend | https://ai-pulse-agent-beta.vercel.app/ |
+| Backend | https://ai-pulse-agent-production.up.railway.app |
+| MCP | https://mcp-server-google-production.up.railway.app |
+
+Set Railway `CORS_ORIGINS` to include the Vercel origin (default in code already allows `https://ai-pulse-agent-beta.vercel.app`).
 
 ### Smoke checks
 
@@ -147,11 +158,10 @@ npm run preview
 ## 3. Connect frontend ↔ backend (when wiring live)
 
 1. Deploy Railway first; confirm `GET /health`.
-2. Set `API_BASE_URL` on Vercel to the Railway HTTPS origin (no trailing slash) — see §2.
-3. Redeploy the Vercel project.
-4. If the browser calls Railway directly, add CORS headers on `src.serve` (or put a small API proxy on Vercel) — **not implemented yet**.
-
-Until that exists, treat Vercel as the static pulse viewer and Railway / Actions as the pipeline runners.
+2. Optional: set `API_BASE_URL` on Vercel (defaults to `https://ai-pulse-agent-production.up.railway.app` in `web/vite.config.ts`).
+3. Redeploy Vercel after frontend API wiring lands.
+4. **Send email** → `POST /deliver` (Doc append + Gmail draft). **Run weekly pulse** → `POST /run`.
+5. CORS: Railway allows the Vercel origin via `CORS_ORIGINS` / defaults in `src/serve.py`.
 
 ---
 
